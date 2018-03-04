@@ -5,8 +5,12 @@ using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
+using Windows.ApplicationModel.Core;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.UI;
+using Windows.UI.Core;
+using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -29,7 +33,7 @@ namespace facetracking_api
         public App()
         {
             this.InitializeComponent();
-            this.Suspending += OnSuspending;
+            this.Suspending += OnSuspending;            
         }
 
         /// <summary>
@@ -71,6 +75,16 @@ namespace facetracking_api
                 // 確定目前視窗是作用中
                 Window.Current.Activate();
             }
+
+            // draw into the title bar
+            var coreTitleBar = CoreApplication.GetCurrentView().TitleBar;
+            coreTitleBar.ExtendViewIntoTitleBar = true;
+
+            // remove the solid-colored backgrounds behind the caption controls and system back button
+            var viewTitleBar = ApplicationView.GetForCurrentView().TitleBar;
+            viewTitleBar.ButtonBackgroundColor = Colors.Transparent;
+            viewTitleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
+            viewTitleBar.ButtonForegroundColor = (Color)Resources["SystemBaseHighColor"];
         }
 
         /// <summary>
