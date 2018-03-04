@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2024
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "facetracking-api", "facetracking-api\facetracking-api.csproj", "{EEF769DF-AA90-4C54-A232-99A82F915CCF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|ARM = Debug|ARM
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|ARM = Release|ARM
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EEF769DF-AA90-4C54-A232-99A82F915CCF}.Debug|ARM.ActiveCfg = Debug|ARM
+		{EEF769DF-AA90-4C54-A232-99A82F915CCF}.Debug|ARM.Build.0 = Debug|ARM
+		{EEF769DF-AA90-4C54-A232-99A82F915CCF}.Debug|ARM.Deploy.0 = Debug|ARM
+		{EEF769DF-AA90-4C54-A232-99A82F915CCF}.Debug|x64.ActiveCfg = Debug|x64
+		{EEF769DF-AA90-4C54-A232-99A82F915CCF}.Debug|x64.Build.0 = Debug|x64
+		{EEF769DF-AA90-4C54-A232-99A82F915CCF}.Debug|x64.Deploy.0 = Debug|x64
+		{EEF769DF-AA90-4C54-A232-99A82F915CCF}.Debug|x86.ActiveCfg = Debug|x86
+		{EEF769DF-AA90-4C54-A232-99A82F915CCF}.Debug|x86.Build.0 = Debug|x86
+		{EEF769DF-AA90-4C54-A232-99A82F915CCF}.Debug|x86.Deploy.0 = Debug|x86
+		{EEF769DF-AA90-4C54-A232-99A82F915CCF}.Release|ARM.ActiveCfg = Release|ARM
+		{EEF769DF-AA90-4C54-A232-99A82F915CCF}.Release|ARM.Build.0 = Release|ARM
+		{EEF769DF-AA90-4C54-A232-99A82F915CCF}.Release|ARM.Deploy.0 = Release|ARM
+		{EEF769DF-AA90-4C54-A232-99A82F915CCF}.Release|x64.ActiveCfg = Release|x64
+		{EEF769DF-AA90-4C54-A232-99A82F915CCF}.Release|x64.Build.0 = Release|x64
+		{EEF769DF-AA90-4C54-A232-99A82F915CCF}.Release|x64.Deploy.0 = Release|x64
+		{EEF769DF-AA90-4C54-A232-99A82F915CCF}.Release|x86.ActiveCfg = Release|x86
+		{EEF769DF-AA90-4C54-A232-99A82F915CCF}.Release|x86.Build.0 = Release|x86
+		{EEF769DF-AA90-4C54-A232-99A82F915CCF}.Release|x86.Deploy.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {FC4BAD58-BD10-4289-BFA4-E5CD76C80CF7}
+	EndGlobalSection
+EndGlobal
