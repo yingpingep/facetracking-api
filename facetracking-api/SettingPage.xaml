@@ -11,6 +11,15 @@
         <StackPanel Margin="10, 0, 0, 0">
             <TextBlock Text="選擇相機" FontSize="30"/>
             <StackPanel x:Name="StackCameraRadios"/>
+            <TextBlock Text="輸入序號" FontSize="30"/>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBox x:Name="SubscriptionKey" Grid.Column="0" Margin="0, 0, 10, 0"/>
+                <Button x:Name="ButtonGetKey" Content="確認" Grid.Column="1" Width="100" Margin="0, 0, 10, 0" Click="ButtonGetKey_Click"/>
+            </Grid>
         </StackPanel>
     </Grid>
 </Page>

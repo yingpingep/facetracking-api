@@ -16,6 +16,7 @@ using Windows.Media;
 using Windows.Media.Capture;
 using Windows.Media.FaceAnalysis;
 using Windows.Media.MediaProperties;
+using Windows.Storage.Streams;
 using Windows.System.Threading;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -181,12 +182,28 @@ namespace facetracking_api
                 using (VideoFrame currentFrame = new VideoFrame(PixelFormat, (int)_videoProperties.Width, (int)_videoProperties.Height))
                 {
                     // Get current preview frame from _mediaCaputre and copy into currentFrame.               
-                    await _mediaCapture.GetPreviewFrameAsync(currentFrame);
-
-                    // Upload to Face API.
+                    await _mediaCapture.GetPreviewFrameAsync(currentFrame);                    
 
                     // Detected face by _faceTracker.
                     IList<DetectedFace> faces = await _faceTracker.ProcessNextFrameAsync(currentFrame);
+
+                    if (faces.Count != 0)
+                    {
+                        // Upload to Face API.                    
+                        SoftwareBitmap t = SoftwareBitmap.Convert(currentFrame.SoftwareBitmap, BitmapPixelFormat.Bgra8);
+                        IRandomAccessStream stream = new InMemoryRandomAccessStream();
+                        BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, stream);
+                        encoder.SetSoftwareBitmap(t);
+                        await encoder.FlushAsync();
+
+                        if (_localSettings.Values["FaceAPIKey"].ToString() != null)
+                        {
+                            var facess = new Microsoft.ProjectOxford.Face.FaceServiceClient(_localSettings.Values["FaceAPIKey"].ToString(), "https://southeastasia.api.cognitive.microsoft.com/face/v1.0");
+                            var g = await facess.DetectAsync(stream.AsStream());
+                            System.Diagnostics.Debug.WriteLine(g.Length + DateTime.Now.ToString("_ HH:mm:ss"));
+                        }                        
+                    }                                        
+
                     var frameSize = new Size(currentFrame.SoftwareBitmap.PixelWidth, currentFrame.SoftwareBitmap.PixelHeight);
                     await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                     {

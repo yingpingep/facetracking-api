@@ -81,5 +81,13 @@ namespace facetracking_api
             _localSettings.Values["CameraId"] = item.CameraId;
             _localSettings.Values["CameraPosition"] = (int)item.Position;
         }
+
+        private void ButtonGetKey_Click(object sender, RoutedEventArgs e)
+        {
+            if (SubscriptionKey.Text != null)
+            {
+                _localSettings.Values["FaceAPIKey"] = SubscriptionKey.Text;
+            }
+        }
     }        
 }
