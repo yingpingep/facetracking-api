@@ -118,18 +118,6 @@ namespace facetracking_api
                         CameraPreview.FlowDirection = FlowDirection.LeftToRight;
                         PaintingCanvas.FlowDirection = FlowDirection.LeftToRight;
                         break;
-                    case CameraPosition.Unknown:
-                        await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-                        {
-                            ToggleSwitch toggle = new ToggleSwitch()
-                            {
-                                Header = "左右反轉",
-                                IsOn = false
-                            };
-                            toggle.Toggled += FlowDircetionSwitch_Toggled;
-                            StackControl.Children.Add(toggle);
-                        });
-                        break;
                     default:
                         break;
                 }
@@ -185,9 +173,9 @@ namespace facetracking_api
                     await _mediaCapture.GetPreviewFrameAsync(currentFrame);                    
 
                     // Detected face by _faceTracker.
-                    IList<DetectedFace> faces = await _faceTracker.ProcessNextFrameAsync(currentFrame);
+                    IList<DetectedFace> builtinFaces = await _faceTracker.ProcessNextFrameAsync(currentFrame);
 
-                    if (faces.Count != 0)
+                    if (builtinFaces.Count != 0)
                     {
                         // Upload to Face API.                    
                         SoftwareBitmap t = SoftwareBitmap.Convert(currentFrame.SoftwareBitmap, BitmapPixelFormat.Bgra8);
@@ -196,18 +184,17 @@ namespace facetracking_api
                         encoder.SetSoftwareBitmap(t);
                         await encoder.FlushAsync();
 
-                        if (_localSettings.Values["FaceAPIKey"].ToString() != null)
-                        {
-                            var facess = new Microsoft.ProjectOxford.Face.FaceServiceClient(_localSettings.Values["FaceAPIKey"].ToString(), "https://southeastasia.api.cognitive.microsoft.com/face/v1.0");
-                            var g = await facess.DetectAsync(stream.AsStream());
-                            System.Diagnostics.Debug.WriteLine(g.Length + DateTime.Now.ToString("_ HH:mm:ss"));
-                        }                        
+                        //if (_localSettings.Values["FaceAPIKey"] != null && _localSettings.Values["EndPoint"] != null)
+                        //{
+                        //    var apiClient = new Microsoft.ProjectOxford.Face.FaceServiceClient(_localSettings.Values["FaceAPIKey"].ToString(), _localSettings.Values["EndPoint"].ToString());
+                        //    var apiFaces = await apiClient.DetectAsync(stream.AsStream());                            
+                        //}                        
                     }                                        
 
                     var frameSize = new Size(currentFrame.SoftwareBitmap.PixelWidth, currentFrame.SoftwareBitmap.PixelHeight);
                     await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                     {
-                        ShowResult(frameSize, faces, new object());
+                        ShowResult(frameSize, builtinFaces, new object());
                     });
                 }
             }
@@ -317,6 +304,7 @@ namespace facetracking_api
             }
 
             CameraPreview.Source = null;
+            PaintingCanvas.Children.Clear();
             _mediaCapture = null;
             _threadPoolTimer = null;
         }

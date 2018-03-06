@@ -67,6 +67,16 @@ namespace facetracking_api
                         StackCameraRadios.Children.Add(rb);
                     }
                 }
+
+                if (_localSettings.Values["FaceAPIKey"] != null)
+                {
+                    SubscriptionKey.Text = _localSettings.Values["FaceAPIKey"].ToString();
+                }
+
+                if (_localSettings.Values["EndPoint"] != null)
+                {
+                    EndPoint.Text = _localSettings.Values["EndPoint"].ToString();
+                }
             }
             catch (Exception)
             {
@@ -84,9 +94,10 @@ namespace facetracking_api
 
         private void ButtonGetKey_Click(object sender, RoutedEventArgs e)
         {
-            if (SubscriptionKey.Text != null)
+            if (SubscriptionKey.Text != null && EndPoint.Text != null)
             {
                 _localSettings.Values["FaceAPIKey"] = SubscriptionKey.Text;
+                _localSettings.Values["EndPoint"] = EndPoint.Text;
             }
         }
     }        
