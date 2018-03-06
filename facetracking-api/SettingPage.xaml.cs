@@ -49,13 +49,14 @@ namespace facetracking_api
                         RadioButton rb = new RadioButton()
                         {
                             Content = item.Name,
-                            Tag = item.CameraId
+                            Tag = item
                         };
 
                         if (item.Position == CameraPosition.Front && _localSettings.Values["CameraId"] == null)
                         {
                             rb.IsChecked = true;
                             _localSettings.Values["CameraId"] = item.CameraId;
+                            _localSettings.Values["CameraPosition"] = 0;
                         }
                         else if (item.CameraId.Equals(_localSettings.Values["CameraId"].ToString()))
                         {
@@ -76,7 +77,9 @@ namespace facetracking_api
         public void CameraRadios_Click(object sender, RoutedEventArgs e)
         {
             RadioButton rb = sender as RadioButton;
-            _localSettings.Values["CameraId"] = rb.Tag.ToString();
+            var item = rb.Tag as CameraModel;
+            _localSettings.Values["CameraId"] = item.CameraId;
+            _localSettings.Values["CameraPosition"] = (int)item.Position;
         }
     }        
 }

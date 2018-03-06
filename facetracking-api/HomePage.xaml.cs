@@ -13,6 +13,7 @@ using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Media.Capture;
 using Windows.Media.FaceAnalysis;
+using Windows.Media.MediaProperties;
 using Windows.System.Threading;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -46,11 +47,12 @@ namespace facetracking_api
         private ThreadPoolTimer _threadPoolTimer;
 
         // Make sure only one face tracking at a time.
-        private SemaphoreSlim _semaphoreSlim;
+        private SemaphoreSlim _semaphoreSlim = new SemaphoreSlim(1);
 
         private Windows.Storage.ApplicationDataContainer _localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
         private string _cameraId;
         private DeviceHelper _deviceHelper;
+        private VideoEncodingProperties _videoProperties;
 
         public HomePage()
         {
@@ -60,16 +62,25 @@ namespace facetracking_api
 
         private void OnSuspending(object sender, SuspendingEventArgs e)
         {
-            throw new NotImplementedException();
+            if (_state ==  StreamingState.Streaming)
+            {
+                ChangeStateAsync(StreamingState.Idle);
+            }            
         }
 
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
+            _state = StreamingState.Idle;
             if (_faceTracker == null)
             {
                 _faceTracker = await FaceTracker.CreateAsync();
             }
             
+        }
+
+        protected override void OnNavigatedFrom(NavigationEventArgs e)
+        {
+            ChangeStateAsync(StreamingState.Idle);
         }
 
         private async Task<bool> StartStreamingAsync()
@@ -83,20 +94,56 @@ namespace facetracking_api
                     _deviceHelper = new DeviceHelper();                
                     var cameraList = await _deviceHelper.GetCameraDevicesAsync();
                     _cameraId = cameraList.Where(x => x.Position == CameraPosition.Front).Select(p => p.CameraId).FirstOrDefault();
-                    _localSettings.Values["CameraId"] = _cameraId;                    
-                
+                    _localSettings.Values["CameraId"] = _cameraId;
+                    _localSettings.Values["CameraPosition"] = (int)CameraPosition.Front;
                 }
 
                 initializationSettings.VideoDeviceId = _localSettings.Values["CameraId"].ToString();
                 initializationSettings.StreamingCaptureMode = StreamingCaptureMode.Video;
 
+                // Select preview flow direction.
+                var cp = (CameraPosition)_localSettings.Values["CameraPosition"];
+                switch (cp)
+                {
+                    case CameraPosition.Front:
+                        CameraPreview.FlowDirection = FlowDirection.RightToLeft;
+                        PaintingCanvas.FlowDirection = FlowDirection.RightToLeft;
+                        break;
+                    case CameraPosition.Back:
+                        CameraPreview.FlowDirection = FlowDirection.LeftToRight;
+                        PaintingCanvas.FlowDirection = FlowDirection.LeftToRight;
+                        break;
+                    case CameraPosition.Unknown:
+                        await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                        {
+                            ToggleSwitch toggle = new ToggleSwitch()
+                            {
+                                Header = "左右反轉",
+                                IsOn = false
+                            };
+                            toggle.Toggled += FlowDircetionSwitch_Toggled;
+                            StackControl.Children.Add(toggle);
+                        });
+                        break;
+                    default:
+                        break;
+                }
+                
                 // Prepare MediaCapture.
                 _mediaCapture = new MediaCapture();
                 await _mediaCapture.InitializeAsync(initializationSettings);
                 _mediaCapture.Failed += MediaCapture_Failed;
 
+                // Get preview video properties for FaceTracker.
+                // e.g. hight and width.
+                var deviceController = _mediaCapture.VideoDeviceController;
+                _videoProperties = deviceController.GetMediaStreamProperties(MediaStreamType.VideoPreview) as VideoEncodingProperties;
+
                 CameraPreview.Source = _mediaCapture;
-                await _mediaCapture.StartPreviewAsync();
+                await _mediaCapture.StartPreviewAsync();                
+
+                TimeSpan period = TimeSpan.FromMilliseconds(66);
+                _threadPoolTimer = ThreadPoolTimer.CreatePeriodicTimer(new TimerElapsedHandler(ProcessCurrentVideoFrame), period);
             }
             catch (UnauthorizedAccessException)
             {
@@ -110,14 +157,105 @@ namespace facetracking_api
             return result;
         }
 
-        private void MediaCapture_Failed(MediaCapture sender, MediaCaptureFailedEventArgs errorEventArgs)
+        private async void ProcessCurrentVideoFrame(ThreadPoolTimer timer)
         {
-            throw new NotImplementedException();
+            // If there has a process still running, return.
+            if (!_semaphoreSlim.Wait(0))
+            {
+                return;
+            }
+
+
         }
 
-        private async void ButtonStream_Click(object sender, RoutedEventArgs e)
+        private void FlowDircetionSwitch_Toggled(object sender, RoutedEventArgs e)
         {
-            await StartStreamingAsync();
+            ToggleSwitch toggle = sender as ToggleSwitch;
+            if (toggle.IsOn)
+            {
+                CameraPreview.FlowDirection = FlowDirection.RightToLeft;
+                PaintingCanvas.FlowDirection = FlowDirection.RightToLeft;
+            }
+            else
+            {
+                CameraPreview.FlowDirection = FlowDirection.LeftToRight;
+                PaintingCanvas.FlowDirection = FlowDirection.LeftToRight;
+            }
+        }
+
+        private async void ChangeStateAsync(StreamingState newState)
+        {
+            switch (newState)
+            {
+                case StreamingState.Idle:
+                    // Clear canvas and stop preview.
+                    await ShutdownCameraAsync();
+                    _state = newState;
+                    break;
+                case StreamingState.Streaming:                  
+                    bool isStartPreview = await StartStreamingAsync();
+                    // If failure to start preview, change state to idle.
+                    if (!isStartPreview)
+                    {
+                        ChangeStateAsync(StreamingState.Idle);
+                        return;
+                    }
+
+                    _state = StreamingState.Streaming;
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        private async Task ShutdownCameraAsync()
+        {
+            try
+            {
+                if (_threadPoolTimer != null)
+                {
+                    _threadPoolTimer.Cancel();
+                }
+
+                if (_mediaCapture != null)
+                {
+                    if (_state == StreamingState.Streaming)
+                    {
+                        await _mediaCapture.StopPreviewAsync();
+                    }
+                    _mediaCapture.Dispose();
+                }
+            }
+            catch (Exception)
+            {                
+            }
+
+            CameraPreview.Source = null;
+            _mediaCapture = null;
+            _threadPoolTimer = null;
+        }
+
+        private async void MediaCapture_Failed(MediaCapture sender, MediaCaptureFailedEventArgs errorEventArgs)
+        {
+            if (_state == StreamingState.Streaming)
+            {
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    ChangeStateAsync(StreamingState.Idle);
+                });
+            }
+        }
+
+        private void ButtonStream_Click(object sender, RoutedEventArgs e)
+        {
+            if (_state == StreamingState.Idle)
+            {
+                ChangeStateAsync(StreamingState.Streaming);
+            }
+            else
+            {
+                ChangeStateAsync(StreamingState.Idle);
+            }
         }
     }
 }
