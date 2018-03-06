@@ -8,6 +8,9 @@
     mc:Ignorable="d">
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">THJJ</TextBlock>
+        <StackPanel Margin="10, 0, 0, 0">
+            <TextBlock Text="選擇相機" FontSize="30"/>
+            <StackPanel x:Name="StackCameraRadios"/>
+        </StackPanel>
     </Grid>
 </Page>

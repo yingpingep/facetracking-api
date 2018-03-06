@@ -14,6 +14,7 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
+using facetracking_api.Services;
 
 // 空白頁項目範本已記錄在 https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x404
 
@@ -26,18 +27,14 @@ namespace facetracking_api
     {
         public MainPage()
         {
-            this.InitializeComponent();
-
-            //List<MenuData> list = new List<MenuData>();
-            //list.Add(new MenuData() { Icon = Symbol.GlobalNavigationButton, Description = "選單", Tag = Models.Control.Menu });
-            //list.Add(new MenuData() { Icon = Symbol.Setting, Description = "設定", Tag = Models.Control.Setting });
-            //Menu.ItemsSource = list;
-        }
+            this.InitializeComponent();            
+        }        
 
         private void NavigationView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
         {            
             if (args.IsSettingsInvoked)
             {
+                NavigationView.Header = "Settings";
                 ContentFrame.Navigate(typeof(SettingPage));
             }
             else
@@ -47,14 +44,24 @@ namespace facetracking_api
             }
         }
 
+        protected override async void OnNavigatedTo(NavigationEventArgs e)
+        {
+            DeviceHelper dh = new DeviceHelper();
+            await dh.GetCameraDevicesAsync();
+            NavigationView.Header = "Microsoft Student Partners in Taiwan";
+            ContentFrame.Navigate(typeof(HomePage));
+        }
+
         private void NavigationView_Navigate(NavigationViewItem item)
         {            
             switch (item.Tag)
             {
                 case "home":
+                    NavigationView.Header = "Microsoft Student Partners in Taiwan";
                     ContentFrame.Navigate(typeof(HomePage));
                     break;
                 case "enroll":
+                    NavigationView.Header = "Enroll";
                     ContentFrame.Navigate(typeof(EnrollPage));
                     break;
                 default:

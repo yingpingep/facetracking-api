@@ -8,7 +8,7 @@
     mc:Ignorable="d">
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <NavigationView x:Name="NavigationView" ItemInvoked="NavigationView_ItemInvoked">
+        <NavigationView x:Name="NavigationView" ItemInvoked="NavigationView_ItemInvoked" Header="Microsoft Student Partners in Taiwan">
             <NavigationView.MenuItems>
                 <NavigationViewItem x:Uid="Home" Content="首頁" Tag="home">
                     <NavigationViewItem.Icon>
@@ -22,7 +22,6 @@
                 </NavigationViewItem>
             </NavigationView.MenuItems>
             <Frame x:Name="ContentFrame">
-                
             </Frame>
         </NavigationView>
     </Grid>

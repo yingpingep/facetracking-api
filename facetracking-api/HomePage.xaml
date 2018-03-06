@@ -8,6 +8,16 @@
     mc:Ignorable="d">
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+        </Grid>
+        <StackPanel Grid.Row="0">
+            <Button x:Name="ButtonStream" Content="Start" Click="ButtonStream_Click"/>
+        </StackPanel>
+        <CaptureElement Grid.Row="1" x:Name="CameraPreview" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Stretch="Fill"/>
+        <Canvas Grid.Row="1" x:Name="PaintingCanvas" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
     </Grid>
 </Page>
