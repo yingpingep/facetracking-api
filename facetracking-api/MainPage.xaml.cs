@@ -44,10 +44,8 @@ namespace facetracking_api
             }
         }
 
-        protected override async void OnNavigatedTo(NavigationEventArgs e)
+        protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            DeviceHelper dh = new DeviceHelper();
-            await dh.GetCameraDevicesAsync();
             NavigationView.Header = "Microsoft Student Partners in Taiwan";
             ContentFrame.Navigate(typeof(HomePage));
         }

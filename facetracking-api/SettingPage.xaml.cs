@@ -51,12 +51,12 @@ namespace facetracking_api
                             Content = item.Name,
                             Tag = item
                         };
-
-                        if (item.Position == CameraPosition.Front && _localSettings.Values["CameraId"] == null)
+                        
+                        if (_localSettings.Values["CameraId"] == null)
                         {
                             rb.IsChecked = true;
                             _localSettings.Values["CameraId"] = item.CameraId;
-                            _localSettings.Values["CameraPosition"] = 0;
+                            _localSettings.Values["CameraPosition"] = (int)item.Position;
                         }
                         else if (item.CameraId.Equals(_localSettings.Values["CameraId"].ToString()))
                         {

@@ -180,8 +180,9 @@ namespace facetracking_api
             {
                 using (VideoFrame currentFrame = new VideoFrame(PixelFormat, (int)_videoProperties.Width, (int)_videoProperties.Height))
                 {
-                    // Get current preview frame from _mediaCaputre and copy into currentFrame.
+                    // Get current preview frame from _mediaCaputre and copy into currentFrame.               
                     await _mediaCapture.GetPreviewFrameAsync(currentFrame);
+
                     // Upload to Face API.
 
                     // Detected face by _faceTracker.

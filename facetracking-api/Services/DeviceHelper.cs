@@ -45,18 +45,25 @@ namespace facetracking_api.Services
                     CameraId = item.Id,
                 };
 
-                if (item.EnclosureLocation.Panel == Windows.Devices.Enumeration.Panel.Front)
-                {
-                    cm.Position = CameraPosition.Front;
-                }
-                else if (item.EnclosureLocation.Panel == Windows.Devices.Enumeration.Panel.Back)
-                {
-                    cm.Position = CameraPosition.Back;
-                }
-                else
+                if (item.EnclosureLocation == null)
                 {
                     cm.Position = CameraPosition.Unknown;
                 }
+                else
+                {
+                    switch (item.EnclosureLocation.Panel)
+                    {
+                        case Windows.Devices.Enumeration.Panel.Front:
+                            cm.Position = CameraPosition.Front;
+                            break;
+                        case Windows.Devices.Enumeration.Panel.Back:
+                            cm.Position = CameraPosition.Back;
+                            break;
+                        default:
+                            cm.Position = CameraPosition.Unknown;
+                            break;
+                    }
+                }                
 
                 lists.Add(cm);
             }
