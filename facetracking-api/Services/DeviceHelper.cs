@@ -33,6 +33,7 @@ namespace facetracking_api.Services
 
             if (devices.Count == 0)
             {
+                System.Diagnostics.Debug.WriteLine("Cannot find any camera.");
                 throw new NullReferenceException();
             }
 

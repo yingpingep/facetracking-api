@@ -11,6 +11,8 @@ using Windows.ApplicationModel;
 using Windows.Devices.Enumeration;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.Graphics.Imaging;
+using Windows.Media;
 using Windows.Media.Capture;
 using Windows.Media.FaceAnalysis;
 using Windows.Media.MediaProperties;
@@ -21,7 +23,9 @@ using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
+using Windows.UI.Xaml.Shapes;
 
 
 // 空白頁項目範本已記錄在 https://go.microsoft.com/fwlink/?LinkId=234238
@@ -159,13 +163,77 @@ namespace facetracking_api
 
         private async void ProcessCurrentVideoFrame(ThreadPoolTimer timer)
         {
+            // If state is not Streaming, return.
+            if (_state != StreamingState.Streaming)
+            {
+                return;
+            }
+
             // If there has a process still running, return.
             if (!_semaphoreSlim.Wait(0))
             {
                 return;
             }
 
+            const BitmapPixelFormat PixelFormat = BitmapPixelFormat.Nv12;
+            try
+            {
+                using (VideoFrame currentFrame = new VideoFrame(PixelFormat, (int)_videoProperties.Width, (int)_videoProperties.Height))
+                {
+                    // Get current preview frame from _mediaCaputre and copy into currentFrame.
+                    await _mediaCapture.GetPreviewFrameAsync(currentFrame);
+                    // Upload to Face API.
 
+                    // Detected face by _faceTracker.
+                    IList<DetectedFace> faces = await _faceTracker.ProcessNextFrameAsync(currentFrame);
+                    var frameSize = new Size(currentFrame.SoftwareBitmap.PixelWidth, currentFrame.SoftwareBitmap.PixelHeight);
+                    await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                    {
+                        ShowResult(frameSize, faces, new object());
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex.Message);
+            }
+            finally
+            {
+                _semaphoreSlim.Release();
+            }
+        }
+
+        private void ShowResult(Size frameSize, IList<DetectedFace> faces, object v)
+        {
+            SolidColorBrush lineBrush = new SolidColorBrush(Windows.UI.Colors.Yellow);
+            double lineThickness = 2.0;
+            SolidColorBrush fillBrush = new SolidColorBrush(Windows.UI.Colors.Transparent);
+
+            double canvasWidth = PaintingCanvas.ActualWidth;
+            double canvasHeight = PaintingCanvas.ActualHeight;
+
+            // Clear.
+            PaintingCanvas.Children.Clear();
+            if (_state == StreamingState.Streaming && faces.Count != 0)
+            {
+                double widthScale = frameSize.Width / canvasWidth;
+                double heightScale = frameSize.Height / canvasHeight;
+
+                foreach (var item in faces)
+                {
+                    Rectangle box = new Rectangle()
+                    {
+                        Width = (uint)(item.FaceBox.Width / widthScale),
+                        Height = (uint)(item.FaceBox.Height / heightScale),
+                        Fill = fillBrush,
+                        StrokeThickness = lineThickness,
+                        Stroke = lineBrush,
+                        Margin = new Thickness((uint)(item.FaceBox.X / widthScale), (uint)(item.FaceBox.Y / heightScale), 0, 0)
+                    };
+
+                    PaintingCanvas.Children.Add(box);
+                }  
+            }
         }
 
         private void FlowDircetionSwitch_Toggled(object sender, RoutedEventArgs e)
