@@ -27,6 +27,7 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 using Windows.UI.Xaml.Shapes;
+using Microsoft.ProjectOxford.Face;
 
 // 空白頁項目範本已記錄在 https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -51,11 +52,13 @@ namespace facetracking_api
         private string _cameraId;
         private DeviceHelper _deviceHelper;
         private VideoEncodingProperties _properties;
+        private FaceServiceClient _faceService;
 
         public EnrollPage()
         {
             this.InitializeComponent();            
             App.Current.Suspending += this.OnSuspending;
+            _faceService = new FaceServiceClient(_localSettings.Values["FaceAPIKey"].ToString(), _localSettings.Values["EndPoint"].ToString());
         }
 
         private void OnSuspending(object sender, SuspendingEventArgs e)
@@ -81,11 +84,77 @@ namespace facetracking_api
                     _state = newState;
                     break;
                 case StreamingState.Took:
+                    if (!await TakePictureAsync())
+                    {
+                        ChangeStateAsync(StreamingState.Idle);
+                        return;
+                    }
 
+                    _state = newState;
                     break;
                 default:
                     break;
             }
+        }
+
+        private async Task<bool> TakePictureAsync()
+        {
+            bool successful = true;
+            if (_state != StreamingState.Streaming)
+            {
+                return false;
+            }
+
+            try
+            {
+                IList<DetectedFace> faces;
+                const BitmapPixelFormat PixelFormat = BitmapPixelFormat.Nv12;
+                using (VideoFrame currentFrame = new VideoFrame(PixelFormat, (int)_properties.Width, (int)_properties.Height))
+                {
+                    await _mediaCapture.GetPreviewFrameAsync(currentFrame);
+                    faces = await _faceDetector.DetectFacesAsync(currentFrame.SoftwareBitmap);
+                    Size size = new Size(currentFrame.SoftwareBitmap.PixelWidth, currentFrame.SoftwareBitmap.PixelHeight);
+
+                    if (faces == null)
+                    {
+                        return false;
+                    }
+
+                    using (SoftwareBitmap bitmap = SoftwareBitmap.Convert(currentFrame.SoftwareBitmap, BitmapPixelFormat.Bgra8))
+                    {
+                        WriteableBitmap source = new WriteableBitmap(bitmap.PixelWidth, bitmap.PixelHeight);
+                        bitmap.CopyToBuffer(source.PixelBuffer);
+
+                        IRandomAccessStream stream = new InMemoryRandomAccessStream();
+                        BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, stream);
+                        encoder.SetSoftwareBitmap(bitmap);
+                        await encoder.FlushAsync();
+
+                        if (UserName.Text.Equals(string.Empty))
+                        {
+                            return false;
+                        }
+
+                        string groupid = "testgroupid";
+                        string groupName = "testgroup";
+                        // await _faceService.CreatePersonGroupAsync(groupid, groupName);
+                        var f = await _faceService.CreatePersonAsync(groupid, UserName.Text);
+                        _localSettings.Values["testid"] = f.PersonId;
+                        var fid = f.PersonId;
+                        await _faceService.AddPersonFaceAsync(groupid, fid, stream.AsStream());
+                        await _faceService.TrainPersonGroupAsync(groupid);
+
+                        ShowUp(size, faces, source);               
+                    }                    
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex.Message);
+                successful = false;
+            }
+
+            return successful;
         }
 
         private async Task ShutdownCameraAsync()
@@ -112,6 +181,7 @@ namespace facetracking_api
         private async Task<bool> StartStreamingAsync()
         {
             bool result = true;
+            PaintingCanvas.Children.Clear();
             try
             {
                 MediaCaptureInitializationSettings initializationSettings = new MediaCaptureInitializationSettings();
@@ -155,26 +225,33 @@ namespace facetracking_api
             {
                 result = false;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+
                 result = false;
             }
 
             return result;
         }
 
-        private void ShowUp(Size frameSize,IList<DetectedFace> faces)
+        private void ShowUp(Size frameSize, IList<DetectedFace> faces, WriteableBitmap picture)
         {
             SolidColorBrush lineBrush = new SolidColorBrush(Windows.UI.Colors.Yellow);
             double lineThickness = 2.0;
             SolidColorBrush fillBrush = new SolidColorBrush(Windows.UI.Colors.Transparent);
 
             double canvasWidth = PaintingCanvas.ActualWidth;
-            double canvasHeight = PaintingCanvas.ActualHeight;
+            double canvasHeight = PaintingCanvas.ActualHeight;            
 
             // Clear.
             PaintingCanvas.Children.Clear();
-            if (_state == StreamingState.Streaming && faces.Count != 0)
+
+            ImageBrush brush = new ImageBrush();
+            brush.ImageSource = picture;
+            brush.Stretch = Stretch.Fill;
+            PaintingCanvas.Background = brush;
+
+            if (_state == StreamingState.Streaming && faces != null)
             {
                 double widthScale = frameSize.Width / canvasWidth;
                 double heightScale = frameSize.Height / canvasHeight;
@@ -194,6 +271,8 @@ namespace facetracking_api
                     PaintingCanvas.Children.Add(box);
                 }
             }
+
+            ChangeStateAsync(StreamingState.Idle);
         }
 
         private void _mediaCapture_Failed(MediaCapture sender, MediaCaptureFailedEventArgs errorEventArgs)
@@ -213,17 +292,31 @@ namespace facetracking_api
 
         private void Submit_Click(object sender, RoutedEventArgs e)
         {
-
+            // Update To Face API and database.
         }
 
         private void Take_Click(object sender, RoutedEventArgs e)
         {
-
+            if (_state == StreamingState.Streaming)
+            {
+                ChangeStateAsync(StreamingState.Took);
+            }
+            else
+            {
+                ChangeStateAsync(StreamingState.Idle);
+            }
         }
 
         private void Preview_Click(object sender, RoutedEventArgs e)
         {
-            ChangeStateAsync(StreamingState.Streaming);
+            if (_state == StreamingState.Idle || _state == StreamingState.Took)
+            {
+                ChangeStateAsync(StreamingState.Streaming);
+            }            
+            else
+            {
+                ChangeStateAsync(StreamingState.Idle);
+            }
         }
     }
 }
