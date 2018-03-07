@@ -177,18 +177,27 @@ namespace facetracking_api
 
                     if (builtinFaces.Count != 0)
                     {
-                        // Upload to Face API.                    
+                        // Get picture from videoframe.               
                         SoftwareBitmap t = SoftwareBitmap.Convert(currentFrame.SoftwareBitmap, BitmapPixelFormat.Bgra8);
                         IRandomAccessStream stream = new InMemoryRandomAccessStream();
                         BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, stream);
                         encoder.SetSoftwareBitmap(t);
                         await encoder.FlushAsync();
 
-                        //if (_localSettings.Values["FaceAPIKey"] != null && _localSettings.Values["EndPoint"] != null)
-                        //{
-                        //    var apiClient = new Microsoft.ProjectOxford.Face.FaceServiceClient(_localSettings.Values["FaceAPIKey"].ToString(), _localSettings.Values["EndPoint"].ToString());
-                        //    var apiFaces = await apiClient.DetectAsync(stream.AsStream());                            
-                        //}                        
+                        string groupid = "testgroupid";
+                        if (_localSettings.Values["FaceAPIKey"] != null && _localSettings.Values["EndPoint"] != null)
+                        {
+                            var apiClient = new Microsoft.ProjectOxford.Face.FaceServiceClient(_localSettings.Values["FaceAPIKey"].ToString(), _localSettings.Values["EndPoint"].ToString());
+                            var faceid = (await apiClient.DetectAsync(stream.AsStream())).Select(x => x.FaceId).ToArray();
+                            if ((await apiClient.GetPersonGroupTrainingStatusAsync(groupid)).Status == Microsoft.ProjectOxford.Face.Contract.Status.Succeeded)
+                            {
+                                var tcc = await apiClient.IdentifyAsync(groupid, faceid);
+                                if (((Guid)_localSettings.Values["testid"]).Equals(tcc[0].Candidates[0].PersonId))
+                                {
+                                    System.Diagnostics.Debug.WriteLine("t");
+                                }                                
+                            }
+                        }                        
                     }                                        
 
                     var frameSize = new Size(currentFrame.SoftwareBitmap.PixelWidth, currentFrame.SoftwareBitmap.PixelHeight);
