@@ -137,9 +137,8 @@ namespace facetracking_api
 
                         string groupid = "testgroupid";
                         string groupName = "testgroup";
-                        // await _faceService.CreatePersonGroupAsync(groupid, groupName);
-                        var f = await _faceService.CreatePersonAsync(groupid, UserName.Text);
-                        _localSettings.Values["testid"] = f.PersonId;
+                        //await _faceService.CreatePersonGroupAsync(groupid, groupName);
+                        var f = await _faceService.CreatePersonAsync(groupid, UserName.Text);                        
                         var fid = f.PersonId;
                         await _faceService.AddPersonFaceAsync(groupid, fid, stream.AsStream());
                         await _faceService.TrainPersonGroupAsync(groupid);

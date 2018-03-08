@@ -77,6 +77,11 @@ namespace facetracking_api
                 {
                     EndPoint.Text = _localSettings.Values["EndPoint"].ToString();
                 }
+
+                if (_localSettings.Values["GroupId"] != null)
+                {
+                    GroupId.Text = _localSettings.Values["GroupName"].ToString();
+                }
             }
             catch (Exception)
             {
@@ -94,10 +99,16 @@ namespace facetracking_api
 
         private void ButtonGetKey_Click(object sender, RoutedEventArgs e)
         {
-            if (SubscriptionKey.Text != null && EndPoint.Text != null)
+            if (SubscriptionKey.Text != null && EndPoint.Text != null && GroupId.Text != null)
             {
                 _localSettings.Values["FaceAPIKey"] = SubscriptionKey.Text;
                 _localSettings.Values["EndPoint"] = EndPoint.Text;
+                _localSettings.Values["GroupId"] = GroupId.Text;
+            }
+            else
+            {
+                // Alert.
+                return;
             }
         }
     }        

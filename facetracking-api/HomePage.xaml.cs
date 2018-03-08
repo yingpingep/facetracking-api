@@ -174,6 +174,7 @@ namespace facetracking_api
 
                     // Detected face by _faceTracker.
                     IList<DetectedFace> builtinFaces = await _faceTracker.ProcessNextFrameAsync(currentFrame);
+                    Microsoft.ProjectOxford.Face.Contract.Face c;
 
                     if (builtinFaces.Count != 0)
                     {
@@ -183,28 +184,25 @@ namespace facetracking_api
                         BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, stream);
                         encoder.SetSoftwareBitmap(t);
                         await encoder.FlushAsync();
-
+                        Microsoft.ProjectOxford.Face.Contract.Person aa;                        
                         string groupid = "testgroupid";
                         if (_localSettings.Values["FaceAPIKey"] != null && _localSettings.Values["EndPoint"] != null)
                         {
                             var apiClient = new Microsoft.ProjectOxford.Face.FaceServiceClient(_localSettings.Values["FaceAPIKey"].ToString(), _localSettings.Values["EndPoint"].ToString());
-                            var faceid = (await apiClient.DetectAsync(stream.AsStream())).Select(x => x.FaceId).ToArray();
+                            c = (await apiClient.DetectAsync(stream.AsStream()))[0];
                             if ((await apiClient.GetPersonGroupTrainingStatusAsync(groupid)).Status == Microsoft.ProjectOxford.Face.Contract.Status.Succeeded)
                             {
-                                var tcc = await apiClient.IdentifyAsync(groupid, faceid);
-                                if (((Guid)_localSettings.Values["testid"]).Equals(tcc[0].Candidates[0].PersonId))
-                                {
-                                    System.Diagnostics.Debug.WriteLine("t");
-                                }                                
+                                var tcc = await apiClient.IdentifyAsync(groupid, new Guid[] { c.FaceId });
+                                aa = await apiClient.GetPersonAsync(groupid, tcc[0].Candidates[0].PersonId);
                             }
-                        }                        
-                    }                                        
 
-                    var frameSize = new Size(currentFrame.SoftwareBitmap.PixelWidth, currentFrame.SoftwareBitmap.PixelHeight);
-                    await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-                    {
-                        ShowResult(frameSize, builtinFaces, new object());
-                    });
+                            var frameSize = new Size(currentFrame.SoftwareBitmap.PixelWidth, currentFrame.SoftwareBitmap.PixelHeight);
+                            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                            {
+                                ShowResult(frameSize, builtinFaces, c);
+                            });
+                        }                        
+                    }                                                                               
                 }
             }
             catch (Exception ex)
@@ -217,14 +215,14 @@ namespace facetracking_api
             }
         }
 
-        private void ShowResult(Size frameSize, IList<DetectedFace> faces, object v)
+        private void ShowResult(Size frameSize, IList<DetectedFace> faces, Microsoft.ProjectOxford.Face.Contract.Face face)
         {
             SolidColorBrush lineBrush = new SolidColorBrush(Windows.UI.Colors.Yellow);
             double lineThickness = 2.0;
             SolidColorBrush fillBrush = new SolidColorBrush(Windows.UI.Colors.Transparent);
 
             double canvasWidth = PaintingCanvas.ActualWidth;
-            double canvasHeight = PaintingCanvas.ActualHeight;
+            double canvasHeight = PaintingCanvas.ActualHeight;            
 
             // Clear.
             PaintingCanvas.Children.Clear();
@@ -242,7 +240,7 @@ namespace facetracking_api
                         Fill = fillBrush,
                         StrokeThickness = lineThickness,
                         Stroke = lineBrush,
-                        Margin = new Thickness((uint)(item.FaceBox.X / widthScale), (uint)(item.FaceBox.Y / heightScale), 0, 0)
+                        Margin = new Thickness((uint)(face.FaceRectangle.Left / widthScale), (uint)(face.FaceRectangle.Top / heightScale), 0, 0)
                     };
 
                     PaintingCanvas.Children.Add(box);

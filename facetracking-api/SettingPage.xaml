@@ -22,10 +22,12 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="auto"/>
                 </Grid.ColumnDefinitions>
-                <TextBox x:Name="SubscriptionKey" Grid.Column="0" Grid.Row="0" Margin="0, 0, 10, 0"/>
+                <TextBox x:Name="SubscriptionKey" Grid.Column="0" Grid.Row="0" Margin="0, 0, 10, 10"/>
                 <TextBox x:Name="EndPoint" Grid.Column="0" Grid.Row="1" Margin="0, 0, 10, 0"/>
                 <Button x:Name="ButtonGetKey" Content="確認" Grid.Column="1" Grid.Row="1"  Width="100" Margin="0, 0, 10, 0" Click="ButtonGetKey_Click"/>
             </Grid>
+            <TextBlock Text="請輸入 PersonGroup ID" FontSize="30"/>
+            <TextBox x:Name="GroupId" Margin="0, 0, 120, 0"/>
         </StackPanel>
     </Grid>
 </Page>
