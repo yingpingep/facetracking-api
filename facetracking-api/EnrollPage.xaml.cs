@@ -121,7 +121,7 @@ namespace facetracking_api
                     faces = await _faceDetector.DetectFacesAsync(currentFrame.SoftwareBitmap);
                     Size size = new Size(currentFrame.SoftwareBitmap.PixelWidth, currentFrame.SoftwareBitmap.PixelHeight);
 
-                    if (faces == null)
+                    if (faces.Count == 0)
                     {
                         return false;
                     }
@@ -147,7 +147,7 @@ namespace facetracking_api
                         {
                             if (await _faceApiHelper.CreatePersonAsync(stream.AsStream(), UserName.Text))
                             {
-                                System.Diagnostics.Debug.WriteLine("{0} has been created.", UserName.Text);
+                                System.Diagnostics.Debug.WriteLine(" has been created.", UserName.Text);
                             }
                         }
                     }                    
@@ -233,7 +233,7 @@ namespace facetracking_api
             }
             catch (Exception ex)
             {
-
+                System.Diagnostics.Debug.WriteLine(ex.Message);
                 result = false;
             }
 

@@ -82,6 +82,11 @@ namespace facetracking_api
                 _faceTracker = await FaceTracker.CreateAsync();
             }
             
+            if (_faceApiHelper == null)
+            {
+                _faceApiHelper = new FaceApiHelper();
+                await _faceApiHelper.CheckGroupExistAsync();
+            }
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -132,7 +137,7 @@ namespace facetracking_api
                 // e.g. hight and width.
                 var deviceController = _mediaCapture.VideoDeviceController;
                 _videoProperties = deviceController.GetMediaStreamProperties(MediaStreamType.VideoPreview) as VideoEncodingProperties;
-
+                
                 CameraPreview.Source = _mediaCapture;
                 await _mediaCapture.StartPreviewAsync();                
 
@@ -175,24 +180,26 @@ namespace facetracking_api
 
                     // Detected face by _faceTracker.
                     IList<DetectedFace> builtinFaces = await _faceTracker.ProcessNextFrameAsync(currentFrame);
+                    SoftwareBitmap tempBitmap = SoftwareBitmap.Convert(currentFrame.SoftwareBitmap, BitmapPixelFormat.Bgra8);
 
                     if (builtinFaces.Count != 0)
-                    {
-                        // Get picture from videoframe.               
-                        SoftwareBitmap tempBitmap = SoftwareBitmap.Convert(currentFrame.SoftwareBitmap, BitmapPixelFormat.Bgra8);
+                    {                        
+                        var frameSize = new Size(currentFrame.SoftwareBitmap.PixelWidth, currentFrame.SoftwareBitmap.PixelHeight);
+                        //await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                        //{
+                        //    ShowResult(frameSize, builtinFaces);
+                        //});
+
+                        // Get picture from videoframe.                                       
                         IRandomAccessStream stream = new InMemoryRandomAccessStream();
                         BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, stream);
                         encoder.SetSoftwareBitmap(tempBitmap);
                         await encoder.FlushAsync();
-
-                        _faceApiHelper = new FaceApiHelper();
-                        await _faceApiHelper.CheckGroupExistAsync();
+                                               
                         CustomFaceModel[] customFaces = await _faceApiHelper.GetIdentifyResultAsync(stream.AsStream());
-
-                        var frameSize = new Size(currentFrame.SoftwareBitmap.PixelWidth, currentFrame.SoftwareBitmap.PixelHeight);
                         await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                         {
-                            ShowResult(frameSize, builtinFaces);
+                            ShowName(frameSize, customFaces);
                         });
                     }                                                                               
                 }
@@ -207,59 +214,72 @@ namespace facetracking_api
             }
         }
 
-        private void ShowResult(Size frameSize, IList<DetectedFace> faceSource)
-        {           
-            var faces = faceSource.ToArray();
-
+        private void ShowResult(Size frameSize, IList<DetectedFace> faces)
+        {   
             SolidColorBrush lineBrush = new SolidColorBrush(Windows.UI.Colors.Yellow);
             double lineThickness = 2.0;
             SolidColorBrush fillBrush = new SolidColorBrush(Windows.UI.Colors.Transparent);
 
             double canvasWidth = PaintingCanvas.ActualWidth;
-            double canvasHeight = PaintingCanvas.ActualHeight;            
+            double canvasHeight = PaintingCanvas.ActualHeight;
 
             // Clear.
             PaintingCanvas.Children.Clear();
-            if (_state == StreamingState.Streaming && faces.Length != 0)
+            if (_state == StreamingState.Streaming && faces.Count != 0)
             {
                 double widthScale = frameSize.Width / canvasWidth;
-                double heightScale = frameSize.Height / canvasHeight;
-
-                for (int i = 0; i < faces.Length; i++)
+                double heightScale = frameSize.Height / canvasHeight;                
+                
+                foreach (var item in faces)
                 {
                     Rectangle box = new Rectangle()
                     {
-                        Width = (uint)(faces[i].FaceBox.Width / widthScale),
-                        Height = (uint)(faces[i].FaceBox.Height / heightScale),
+                        Width = (uint)(item.FaceBox.Width / widthScale),
+                        Height = (uint)(item.FaceBox.Height / heightScale),
                         Fill = fillBrush,
                         StrokeThickness = lineThickness,
                         Stroke = lineBrush,
-                        Margin = new Thickness((uint)(faces[i].FaceBox.X / widthScale), (uint)(faces[i].FaceBox.Y / heightScale), 0, 0)
+                        Margin = new Thickness((uint)(item.FaceBox.X / widthScale), (uint)(item.FaceBox.Y / heightScale), 0, 0)
                     };
                     PaintingCanvas.Children.Add(box);
-
-                    //TextBlock t = new TextBlock()
-                    //{
-                    //    Text = customFaces[i].Name,
-                    //    Margin = new Thickness((uint)(customFaces[i].Left / widthScale), (uint)(customFaces[i].Top / heightScale), 0, 0)
-                    //};
-                    //PaintingCanvas.Children.Add(t);
                 };
             }
         }
 
-        private void FlowDircetionSwitch_Toggled(object sender, RoutedEventArgs e)
+        private void ShowName(Size frameSize, CustomFaceModel[] customFaces)
         {
-            ToggleSwitch toggle = sender as ToggleSwitch;
-            if (toggle.IsOn)
+            SolidColorBrush lineBrush = new SolidColorBrush(Windows.UI.Colors.Yellow);
+            double lineThickness = 2.0;
+            SolidColorBrush fillBrush = new SolidColorBrush(Windows.UI.Colors.Transparent);
+
+            PaintingCanvas.Children.Clear();
+            if (_state == StreamingState.Streaming && customFaces != null)
             {
-                CameraPreview.FlowDirection = FlowDirection.RightToLeft;
-                PaintingCanvas.FlowDirection = FlowDirection.RightToLeft;
-            }
-            else
-            {
-                CameraPreview.FlowDirection = FlowDirection.LeftToRight;
-                PaintingCanvas.FlowDirection = FlowDirection.LeftToRight;
+                double widthScale = frameSize.Width / PaintingCanvas.ActualWidth;
+                double heightScale = frameSize.Height / PaintingCanvas.ActualHeight;
+
+                foreach (var item in customFaces)
+                {
+                    Rectangle box = new Rectangle()
+                    {
+                        Width = (uint)(item.Width / widthScale),
+                        Height = (uint)(item.Height / heightScale),
+                        Fill = fillBrush,
+                        StrokeThickness = lineThickness,
+                        Stroke = lineBrush,
+                        Margin = new Thickness((uint)(item.Left / widthScale), (uint)(item.Top / heightScale), 0, 0)
+                    };
+                    PaintingCanvas.Children.Add(box);
+
+                    TextBlock t = new TextBlock()
+                    {
+                        Text = item.Name,
+                        FontSize = 24,
+                        Foreground = lineBrush,
+                        Margin = new Thickness((uint)(item.Left / widthScale), (uint)(item.Top / heightScale), 0, 0)
+                    };
+                    PaintingCanvas.Children.Add(t);
+                }                
             }
         }
 

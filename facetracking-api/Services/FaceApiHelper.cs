@@ -100,11 +100,12 @@ namespace facetracking_api.Services
                     {
                         Name = name,
                         Top = rectangle.Top,
-                        Left = rectangle.Left
+                        Left = rectangle.Left,
+                        Width = rectangle.Width,
+                        Height = rectangle.Height
                     };
 
-                    System.Diagnostics.Debug.WriteLine(string.Format("{0} faces.", i));
-                    customFaceModels[i] = model;        
+                    customFaceModels[i] = model;
                 };                
             }
             catch (Exception ex)

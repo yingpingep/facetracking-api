@@ -16,7 +16,7 @@
             <Button x:Name="ButtonStream" Content="Start" Click="ButtonStream_Click" Margin="20, 0, 20, 0"/>
         </StackPanel>
         <Grid Margin="20, 15, 20, 15" Grid.Row="1">
-            <CaptureElement x:Name="CameraPreview" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Stretch="Fill" />
+            <CaptureElement x:Name="CameraPreview" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Stretch="Fill"/>
             <Canvas x:Name="PaintingCanvas" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
         </Grid>
     </Grid>
