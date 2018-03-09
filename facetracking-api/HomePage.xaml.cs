@@ -18,6 +18,7 @@ using Windows.Media.FaceAnalysis;
 using Windows.Media.MediaProperties;
 using Windows.Storage.Streams;
 using Windows.System.Threading;
+using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -46,7 +47,7 @@ namespace facetracking_api
 
         private StreamingState _state;
         private MediaCapture _mediaCapture;
-        private FaceTracker _faceTracker;
+        private FaceTracker _faceTracker;        
 
         // To initiate face tracking on a define interval.
         private ThreadPoolTimer _threadPoolTimer;
@@ -55,10 +56,8 @@ namespace facetracking_api
         private SemaphoreSlim _semaphoreSlim = new SemaphoreSlim(1);
 
         private Windows.Storage.ApplicationDataContainer _localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
-        private string _cameraId;
-        private DeviceHelper _deviceHelper;
         private VideoEncodingProperties _videoProperties;
-        private FaceApiHelper _faceApiHelper;
+        FaceApiHelper _faceApiHelper;
 
         public HomePage()
         {
@@ -68,7 +67,7 @@ namespace facetracking_api
 
         private void OnSuspending(object sender, SuspendingEventArgs e)
         {
-            if (_state ==  StreamingState.Streaming)
+            if (_state == StreamingState.Streaming)
             {
                 ChangeStateAsync(StreamingState.Idle);
             }            
@@ -84,8 +83,19 @@ namespace facetracking_api
             
             if (_faceApiHelper == null)
             {
-                _faceApiHelper = new FaceApiHelper();
-                await _faceApiHelper.CheckGroupExistAsync();
+                try
+                {
+                    _faceApiHelper = new FaceApiHelper();
+                    await _faceApiHelper.CheckGroupExistAsync();
+                }
+                catch (Microsoft.ProjectOxford.Face.FaceAPIException faceEx)
+                {
+                    ShowErrorHelper.ShowDialog(faceEx.ErrorMessage, faceEx.ErrorCode);
+                }
+                catch (Exception ex)
+                {
+                    ShowErrorHelper.ShowDialog(ex.Message);
+                }
             }
         }
 
@@ -102,11 +112,8 @@ namespace facetracking_api
                 MediaCaptureInitializationSettings initializationSettings = new MediaCaptureInitializationSettings();
                 if (_localSettings.Values["CameraId"] == null)
                 {
-                    _deviceHelper = new DeviceHelper();                
-                    var cameraList = await _deviceHelper.GetCameraDevicesAsync();
-                    _cameraId = cameraList.Where(x => x.Position == CameraPosition.Front).Select(p => p.CameraId).FirstOrDefault();
-                    _localSettings.Values["CameraId"] = _cameraId;
-                    _localSettings.Values["CameraPosition"] = (int)CameraPosition.Front;
+                    ShowErrorHelper.ShowDialog("Cannot get your CamreaId, plase check your setting.");
+                    return false;
                 }
 
                 initializationSettings.VideoDeviceId = _localSettings.Values["CameraId"].ToString();
@@ -148,8 +155,9 @@ namespace facetracking_api
             {
                 result = false;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                ShowErrorHelper.ShowDialog("Cannot start to preview because " + ex.Message);
                 result = false;
             }
 
@@ -195,18 +203,27 @@ namespace facetracking_api
                         BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, stream);
                         encoder.SetSoftwareBitmap(tempBitmap);
                         await encoder.FlushAsync();
-                                               
+                        
                         CustomFaceModel[] customFaces = await _faceApiHelper.GetIdentifyResultAsync(stream.AsStream());
                         await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-                        {
-                            ShowName(frameSize, customFaces);
-                        });
-                    }                                                                               
+                            ShowFromFaceApi(frameSize, customFaces));
+                    }
+                    else
+                    {
+                        await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                            PaintingCanvas.Children.Clear());
+                    }
                 }
+            }
+            catch (Microsoft.ProjectOxford.Face.FaceAPIException faceEx)
+            {
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                    ShowErrorHelper.ShowDialog(faceEx.ErrorMessage, faceEx.ErrorCode));                
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine(ex.Message);
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                    ShowErrorHelper.ShowDialog(ex.Message));                
             }
             finally
             {
@@ -214,7 +231,7 @@ namespace facetracking_api
             }
         }
 
-        private void ShowResult(Size frameSize, IList<DetectedFace> faces)
+        private void ShowFromBuiltIn(Size frameSize, IList<DetectedFace> faces)
         {   
             SolidColorBrush lineBrush = new SolidColorBrush(Windows.UI.Colors.Yellow);
             double lineThickness = 2.0;
@@ -246,10 +263,10 @@ namespace facetracking_api
             }
         }
 
-        private void ShowName(Size frameSize, CustomFaceModel[] customFaces)
+        private void ShowFromFaceApi(Size frameSize, CustomFaceModel[] customFaces)
         {
             SolidColorBrush lineBrush = new SolidColorBrush(Windows.UI.Colors.Yellow);
-            double lineThickness = 2.0;
+            double lineThickness = 3.0;
             SolidColorBrush fillBrush = new SolidColorBrush(Windows.UI.Colors.Transparent);
 
             PaintingCanvas.Children.Clear();
@@ -271,15 +288,25 @@ namespace facetracking_api
                     };
                     PaintingCanvas.Children.Add(box);
 
+                    Grid grid = new Grid()
+                    {
+                        Background = lineBrush,
+                        Width = (item.Width / widthScale),
+                        VerticalAlignment = VerticalAlignment.Center,
+                        HorizontalAlignment = HorizontalAlignment.Center,
+                        Margin = new Thickness((uint)(item.Left / widthScale), (uint)(item.Top / heightScale), 0, 0)
+                    };
+
                     TextBlock t = new TextBlock()
                     {
                         Text = item.Name,
-                        FontSize = 24,
-                        Foreground = lineBrush,
-                        Margin = new Thickness((uint)(item.Left / widthScale), (uint)(item.Top / heightScale), 0, 0)
+                        FontSize = 28,
+                        HorizontalTextAlignment = TextAlignment.Right,
+                        Foreground = new SolidColorBrush(Windows.UI.Colors.Black)            
                     };
-                    PaintingCanvas.Children.Add(t);
-                }                
+                    grid.Children.Add(t);
+                    PaintingCanvas.Children.Add(grid);
+                }
             }
         }
 
@@ -357,6 +384,6 @@ namespace facetracking_api
             {
                 ChangeStateAsync(StreamingState.Idle);
             }
-        }
+        }        
     }
 }

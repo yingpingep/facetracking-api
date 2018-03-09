@@ -13,8 +13,7 @@ namespace facetracking_api.Services
 {    
     public class FaceApiHelper
     {
-        private FaceServiceClient _serviceClient;        
-        private const int CallLimitPerSecond = 10;
+        private FaceServiceClient _serviceClient;   
         private Queue<DateTime> _timeStampQueue = new Queue<DateTime>();
         private Windows.Storage.ApplicationDataContainer _localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
         private string _groupId;
@@ -29,30 +28,26 @@ namespace facetracking_api.Services
             _serviceClient = new FaceServiceClient(_localSettings.Values["FaceAPIKey"].ToString(), _localSettings.Values["EndPoint"].ToString());
         }
 
-        public async Task<bool> CheckGroupExistAsync()
+        public async Task CheckGroupExistAsync()
         {
-            bool exist = true;
             if (_localSettings.Values["GroupId"] == null)
             {
-                return false;
+                throw new NullReferenceException("Cannot find GroupId.");
             }
 
             try
             {
                 _groupId = _localSettings.Values["GroupId"].ToString();
                 var group = await _serviceClient.GetPersonGroupAsync(_groupId);
-                if (group == null)
-                {
-                    await _serviceClient.CreatePersonGroupAsync(_groupId, _groupId + "Name");                    
-                }
+            }
+            catch (FaceAPIException)
+            {                
+                await _serviceClient.CreatePersonGroupAsync(_groupId, _groupId + "Name");
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine(ex.Message);
-                exist = false;
-            }                                    
-
-            return exist;
+                throw ex;
+            }
         }
 
         public async Task<bool> CreatePersonAsync(Stream picture, string userName)
@@ -60,18 +55,19 @@ namespace facetracking_api.Services
             bool successful = true;
             
             try
-            {
-                await WaitIfOverCallLimitAsync();
+            {                
                 CreatePersonResult createPerson = await _serviceClient.CreatePersonAsync(_groupId, userName);
-
-                await WaitIfOverCallLimitAsync();
+                
                 await _serviceClient.AddPersonFaceAsync(_groupId, createPerson.PersonId, picture);
 
                 await _serviceClient.TrainPersonGroupAsync(_groupId);
             }
-            catch (Exception ex)
+            catch (FaceAPIException)
             {
-                System.Diagnostics.Debug.WriteLine(ex.Message);
+                successful = false;
+            }
+            catch (Exception)
+            {                
                 successful = false;
             }
 
@@ -89,13 +85,23 @@ namespace facetracking_api.Services
                 Guid[] guids = detectResults.Select(x => x.FaceId).ToArray();
                 IdentifyResult[] identifyResults = await _serviceClient.IdentifyAsync(_groupId, guids);
 
-                customFaceModels = new CustomFaceModel[detectResults.Length];
+                customFaceModels = new CustomFaceModel[detectResults.Length];                
                 for (int i = 0; i < identifyResults.Length; i++)
                 {
                     FaceRectangle rectangle = detectResults[i].FaceRectangle;
 
-                    // await WaitIfOverCallLimitAsync();
-                    string name = (await _serviceClient.GetPersonAsync(_groupId, identifyResults[i].Candidates[0].PersonId)).Name;
+                    // Set initial name to Unknown.
+                    string name = "Unknown";
+                    try
+                    {
+                        name = (await _serviceClient.GetPersonAsync(_groupId, identifyResults[i].Candidates[0].PersonId)).Name;
+                    }
+                    catch (Exception)
+                    {
+                        // Just catch person not found.
+                        // It will return a name "Unknown" for this one.
+                    }
+
                     CustomFaceModel model = new CustomFaceModel()
                     {
                         Name = name,
@@ -108,36 +114,12 @@ namespace facetracking_api.Services
                     customFaceModels[i] = model;
                 };                
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                System.Diagnostics.Debug.WriteLine(ex.Message);                
+                // Just catch it.
             }
 
             return customFaceModels;
         }
-
-        public async Task WaitIfOverCallLimitAsync()
-        {
-            Monitor.Enter(_timeStampQueue);
-            try
-            {                
-                if (_timeStampQueue.Count >= CallLimitPerSecond)
-                {
-                    TimeSpan interval = DateTime.UtcNow - _timeStampQueue.Peek();
-                    if (interval < TimeSpan.FromSeconds(1))
-                    {
-                        // Make sure only 10 times can be called per second.
-                        await Task.Delay(TimeSpan.FromSeconds(1) - interval);
-                    }
-                    _timeStampQueue.Dequeue();
-                }
-            }
-            finally
-            {
-                _timeStampQueue.Enqueue(DateTime.UtcNow);
-            }
-        }
-
-
     }
 }

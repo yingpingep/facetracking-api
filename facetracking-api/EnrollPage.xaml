@@ -8,30 +8,19 @@
     mc:Ignorable="d">
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="auto"/>
-        </Grid.ColumnDefinitions>
-
-        <Grid Grid.Column="0">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="auto"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
-            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="10, 10, 0, 10">
-                <Button Content="預覽" x:Name="Preview" Click="Preview_Click" Width="100" Margin="0, 0, 10, 0"/>
-                <Button Content="拍攝" x:Name="Take" Click="Take_Click" Width="100"/>
-            </StackPanel>
-            <CaptureElement Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Stretch="Fill" x:Name="CameraPreview"/>
-            <Canvas Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" x:Name="PaintingCanvas"/>
-        </Grid>
-
-        <StackPanel Grid.Column="1" Width="200" Margin="10, 10, 10, 10">
-            <TextBlock Text="名字" FontSize="24"/>
-            <TextBox x:Name="UserName" />
-            <TextBlock Text="Group" FontSize="24"/>
-            <TextBox x:Name="GroupName" />
-            <Button x:Name="Submit" Click="Submit_Click" Content="送出" FontSize="24" HorizontalAlignment="Stretch" Margin="0, 10, 0, 0"/>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="10, 10, 0, 10" VerticalAlignment="Center">
+            <TextBlock Text="名字" FontSize="24" VerticalAlignment="Center"/>
+            <TextBox x:Name="UserName" Margin="10, 0, 10, 0" Width="200" Height="30"/>
+            <Button Content="&#xE714;" FontFamily="Segoe MDL2 Assets" Background="Transparent" x:Name="Preview" Click="Preview_Click" Width="50" Height="50" Margin="0, 0, 10, 0"/>
+            <Button Content="&#xE722;" FontFamily="Segoe MDL2 Assets" Background="Transparent" x:Name="Take" Click="Take_Click" Width="50" Height="50"/>
         </StackPanel>
+        <Grid Margin="20, 15, 20, 15" Grid.Row="1">
+            <CaptureElement HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Stretch="Fill" x:Name="CameraPreview"/>
+            <Canvas HorizontalAlignment="Stretch" VerticalAlignment="Stretch" x:Name="PaintingCanvas"/>
+        </Grid>
     </Grid>
 </Page>

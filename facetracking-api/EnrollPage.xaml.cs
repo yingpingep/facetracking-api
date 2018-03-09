@@ -50,7 +50,6 @@ namespace facetracking_api
         private FaceDetector _faceDetector;       
         private Windows.Storage.ApplicationDataContainer _localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
         private string _cameraId;
-        private DeviceHelper _deviceHelper;
         private VideoEncodingProperties _properties;
         private FaceServiceClient _faceService;
         private FaceApiHelper _faceApiHelper;
@@ -67,6 +66,34 @@ namespace facetracking_api
             ChangeStateAsync(StreamingState.Idle);
         }
 
+        protected override async void OnNavigatedTo(NavigationEventArgs e)
+        {
+            PaintingCanvas.Background = null;
+            _state = StreamingState.Idle;
+
+            if (_faceDetector == null)
+            {
+                _faceDetector = await FaceDetector.CreateAsync();
+            }
+
+            if (_faceApiHelper == null)
+            {
+                try
+                {
+                    _faceApiHelper = new FaceApiHelper();
+                    await _faceApiHelper.CheckGroupExistAsync();
+                }
+                catch (FaceAPIException faceEx)
+                {
+                    ShowErrorHelper.ShowDialog(faceEx.ErrorMessage, faceEx.ErrorCode);
+                }
+                catch (Exception ex)
+                {
+                    ShowErrorHelper.ShowDialog(ex.Message);
+                }
+            }
+        }
+
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
             ChangeStateAsync(StreamingState.Idle);
@@ -81,9 +108,11 @@ namespace facetracking_api
                     _state = newState;
                     break;
                 case StreamingState.Streaming:
+                    PaintingCanvas.Children.Clear();
+                    PaintingCanvas.Background = null;
                     if (!await StartStreamingAsync())
-                    {
-                        ChangeStateAsync(StreamingState.Idle);
+                    {                        
+                        ChangeStateAsync(StreamingState.Idle);                        
                         return;
                     }
 
@@ -91,8 +120,8 @@ namespace facetracking_api
                     break;
                 case StreamingState.Took:
                     if (!await TakePictureAsync())
-                    {
-                        ChangeStateAsync(StreamingState.Idle);
+                    {                        
+                        ChangeStateAsync(StreamingState.Idle);                        
                         return;
                     }
 
@@ -121,9 +150,9 @@ namespace facetracking_api
                     faces = await _faceDetector.DetectFacesAsync(currentFrame.SoftwareBitmap);
                     Size size = new Size(currentFrame.SoftwareBitmap.PixelWidth, currentFrame.SoftwareBitmap.PixelHeight);
 
-                    if (faces.Count == 0)
+                    if (faces.Count == 0 || faces.Count > 1)
                     {
-                        return false;
+                        throw new Exception("Too many people. (Or no one.)");
                     }
 
                     using (SoftwareBitmap bitmap = SoftwareBitmap.Convert(currentFrame.SoftwareBitmap, BitmapPixelFormat.Bgra8))
@@ -135,27 +164,27 @@ namespace facetracking_api
                         BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, stream);
                         encoder.SetSoftwareBitmap(bitmap);
                         await encoder.FlushAsync();
+                        ShowUp(size, faces, source);
 
                         if (UserName.Text.Equals(string.Empty))
                         {
-                            return false;
+                            throw new Exception("Enter your name.");
                         }                        
-
-                        ShowUp(size, faces, source);
-                        _faceApiHelper = new FaceApiHelper();
-                        if (await _faceApiHelper.CheckGroupExistAsync())
+                                                
+                        if (await _faceApiHelper.CreatePersonAsync(stream.AsStream(), UserName.Text))
                         {
-                            if (await _faceApiHelper.CreatePersonAsync(stream.AsStream(), UserName.Text))
-                            {
-                                System.Diagnostics.Debug.WriteLine(" has been created.", UserName.Text);
-                            }
+                            ShowErrorHelper.ShowDialog("Hi " + UserName.Text + ".", "Success");
+                        }
+                        else
+                        {
+                            ShowErrorHelper.ShowDialog("Something went wrong. Try again.");
                         }
                     }                    
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine(ex.Message);
+                ShowErrorHelper.ShowDialog(ex.Message);
                 successful = false;
             }
 
@@ -180,7 +209,7 @@ namespace facetracking_api
                 ;
             }
 
-            CameraPreview.Source = null;
+            CameraPreview.Source = null;                   
             _mediaCapture = null;            
         }
 
@@ -193,11 +222,7 @@ namespace facetracking_api
                 MediaCaptureInitializationSettings initializationSettings = new MediaCaptureInitializationSettings();
                 if (_localSettings.Values["CameraId"] == null)
                 {
-                    _deviceHelper = new DeviceHelper();
-                    var cameraList = await _deviceHelper.GetCameraDevicesAsync();
-                    _cameraId = cameraList.Where(x => x.Position == CameraPosition.Front).Select(c => c.CameraId).FirstOrDefault();
-                    _localSettings.Values["CameraId"] = _cameraId;
-                    _localSettings.Values["CameraPosition"] = (int)CameraPosition.Front;
+                    ShowErrorHelper.ShowDialog("Cannot get your CamreaId, plase check your setting.");
                 }
 
                 _cameraId = _localSettings.Values["CameraId"].ToString();
@@ -233,7 +258,7 @@ namespace facetracking_api
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine(ex.Message);
+                ShowErrorHelper.ShowDialog(ex.Message);
                 result = false;
             }
 
@@ -285,21 +310,7 @@ namespace facetracking_api
         {
             ChangeStateAsync(StreamingState.Idle);
         }
-
-        protected override async void OnNavigatedTo(NavigationEventArgs e)
-        {
-            _state = StreamingState.Idle;
-
-            if (_faceDetector == null)
-            {
-                _faceDetector = await FaceDetector.CreateAsync();
-            }
-        }
-
-        private void Submit_Click(object sender, RoutedEventArgs e)
-        {
-            // Update To Face API and database.
-        }
+        
 
         private void Take_Click(object sender, RoutedEventArgs e)
         {

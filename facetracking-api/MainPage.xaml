@@ -10,12 +10,12 @@
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <NavigationView x:Name="NavigationView" ItemInvoked="NavigationView_ItemInvoked" Header="Microsoft Student Partners in Taiwan">
             <NavigationView.MenuItems>
-                <NavigationViewItem x:Uid="Home" Content="首頁" Tag="home">
+                <NavigationViewItem x:Uid="Home" Content="Home" Tag="home">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE80F;"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem x:Uid="Enroll" Content="填資料" Tag="enroll">
+                <NavigationViewItem x:Uid="Enroll" Content="Create" Tag="enroll">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xECC8;"/>
                     </NavigationViewItem.Icon>

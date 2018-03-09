@@ -110,6 +110,7 @@
     </Compile>
     <Compile Include="Models\CameraModel.cs" />
     <Compile Include="Models\CustomFaceModel.cs" />
+    <Compile Include="Services\ShowErrorHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\DeviceHelper.cs" />
     <Compile Include="Services\FaceApiHelper.cs" />
