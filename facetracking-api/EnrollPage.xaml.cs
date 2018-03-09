@@ -51,14 +51,12 @@ namespace facetracking_api
         private Windows.Storage.ApplicationDataContainer _localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
         private string _cameraId;
         private VideoEncodingProperties _properties;
-        private FaceServiceClient _faceService;
         private FaceApiHelper _faceApiHelper;
 
         public EnrollPage()
         {
             this.InitializeComponent();            
-            App.Current.Suspending += this.OnSuspending;
-            _faceService = new FaceServiceClient(_localSettings.Values["FaceAPIKey"].ToString(), _localSettings.Values["EndPoint"].ToString());
+            App.Current.Suspending += this.OnSuspending;            
         }
 
         private void OnSuspending(object sender, SuspendingEventArgs e)
