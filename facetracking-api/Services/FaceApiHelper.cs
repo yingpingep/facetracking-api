@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using facetracking_api.Models;
 using Microsoft.ProjectOxford.Face;
 using Microsoft.ProjectOxford.Face.Contract;
 
@@ -12,8 +13,7 @@ namespace facetracking_api.Services
 {    
     public class FaceApiHelper
     {
-        private FaceServiceClient _serviceClient;
-        private const int PonserCount = 10000;
+        private FaceServiceClient _serviceClient;        
         private const int CallLimitPerSecond = 10;
         private Queue<DateTime> _timeStampQueue = new Queue<DateTime>();
         private Windows.Storage.ApplicationDataContainer _localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
@@ -55,13 +55,18 @@ namespace facetracking_api.Services
             return exist;
         }
 
-        public async Task<bool> IsCreatedPersonAsync(Stream picture, string userName)
+        public async Task<bool> CreatePersonAsync(Stream picture, string userName)
         {
-            bool successful = true;            
+            bool successful = true;
             
             try
             {
-                await _serviceClient.CreatePersonAsync(_groupId, userName);
+                await WaitIfOverCallLimitAsync();
+                CreatePersonResult createPerson = await _serviceClient.CreatePersonAsync(_groupId, userName);
+
+                await WaitIfOverCallLimitAsync();
+                await _serviceClient.AddPersonFaceAsync(_groupId, createPerson.PersonId, picture);
+
                 await _serviceClient.TrainPersonGroupAsync(_groupId);
             }
             catch (Exception ex)
@@ -71,6 +76,43 @@ namespace facetracking_api.Services
             }
 
             return successful;
+        }
+
+        public async Task<CustomFaceModel[]> GetIdentifyResultAsync(Stream picture)
+        {
+            CustomFaceModel[] customFaceModels = null;
+            try
+            {                
+                // await WaitIfOverCallLimitAsync();
+                Face[] detectResults = await _serviceClient.DetectAsync(picture);
+                    
+                Guid[] guids = detectResults.Select(x => x.FaceId).ToArray();
+                IdentifyResult[] identifyResults = await _serviceClient.IdentifyAsync(_groupId, guids);
+
+                customFaceModels = new CustomFaceModel[detectResults.Length];
+                for (int i = 0; i < identifyResults.Length; i++)
+                {
+                    FaceRectangle rectangle = detectResults[i].FaceRectangle;
+
+                    // await WaitIfOverCallLimitAsync();
+                    string name = (await _serviceClient.GetPersonAsync(_groupId, identifyResults[i].Candidates[0].PersonId)).Name;
+                    CustomFaceModel model = new CustomFaceModel()
+                    {
+                        Name = name,
+                        Top = rectangle.Top,
+                        Left = rectangle.Left
+                    };
+
+                    System.Diagnostics.Debug.WriteLine(string.Format("{0} faces.", i));
+                    customFaceModels[i] = model;        
+                };                
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex.Message);                
+            }
+
+            return customFaceModels;
         }
 
         public async Task WaitIfOverCallLimitAsync()

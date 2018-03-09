@@ -80,7 +80,7 @@ namespace facetracking_api
 
                 if (_localSettings.Values["GroupId"] != null)
                 {
-                    GroupId.Text = _localSettings.Values["GroupName"].ToString();
+                    GroupId.Text = _localSettings.Values["GroupId"].ToString();
                 }
             }
             catch (Exception)

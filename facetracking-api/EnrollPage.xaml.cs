@@ -53,6 +53,7 @@ namespace facetracking_api
         private DeviceHelper _deviceHelper;
         private VideoEncodingProperties _properties;
         private FaceServiceClient _faceService;
+        private FaceApiHelper _faceApiHelper;
 
         public EnrollPage()
         {
@@ -62,6 +63,11 @@ namespace facetracking_api
         }
 
         private void OnSuspending(object sender, SuspendingEventArgs e)
+        {
+            ChangeStateAsync(StreamingState.Idle);
+        }
+
+        protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
             ChangeStateAsync(StreamingState.Idle);
         }
@@ -133,17 +139,17 @@ namespace facetracking_api
                         if (UserName.Text.Equals(string.Empty))
                         {
                             return false;
+                        }                        
+
+                        ShowUp(size, faces, source);
+                        _faceApiHelper = new FaceApiHelper();
+                        if (await _faceApiHelper.CheckGroupExistAsync())
+                        {
+                            if (await _faceApiHelper.CreatePersonAsync(stream.AsStream(), UserName.Text))
+                            {
+                                System.Diagnostics.Debug.WriteLine("{0} has been created.", UserName.Text);
+                            }
                         }
-
-                        string groupid = "testgroupid";
-                        string groupName = "testgroup";
-                        //await _faceService.CreatePersonGroupAsync(groupid, groupName);
-                        var f = await _faceService.CreatePersonAsync(groupid, UserName.Text);                        
-                        var fid = f.PersonId;
-                        await _faceService.AddPersonFaceAsync(groupid, fid, stream.AsStream());
-                        await _faceService.TrainPersonGroupAsync(groupid);
-
-                        ShowUp(size, faces, source);               
                     }                    
                 }
             }
@@ -171,6 +177,7 @@ namespace facetracking_api
             }
             catch (Exception)
             {
+                ;
             }
 
             CameraPreview.Source = null;
