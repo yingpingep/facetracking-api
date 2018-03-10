@@ -104,6 +104,8 @@ namespace facetracking_api
                 _localSettings.Values["FaceAPIKey"] = SubscriptionKey.Text;
                 _localSettings.Values["EndPoint"] = EndPoint.Text;
                 _localSettings.Values["GroupId"] = GroupId.Text;
+
+                ShowErrorHelper.ShowDialog("Your settings have been store", "Done");
             }
             else
             {

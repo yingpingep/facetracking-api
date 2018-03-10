@@ -204,6 +204,7 @@ namespace facetracking_api
                         encoder.SetSoftwareBitmap(tempBitmap);
                         await encoder.FlushAsync();
                         
+
                         CustomFaceModel[] customFaces = await _faceApiHelper.GetIdentifyResultAsync(stream.AsStream());
                         await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                             ShowFromFaceApi(frameSize, customFaces));
