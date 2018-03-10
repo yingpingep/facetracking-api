@@ -3,7 +3,7 @@ using Windows.UI.Popups;
 
 namespace facetracking_api.Services
 {
-    public class ShowErrorHelper
+    public class ShowAlertHelper
     {
         public static async void ShowDialog(string message, string title = "Error")
         {

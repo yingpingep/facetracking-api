@@ -83,11 +83,11 @@ namespace facetracking_api
                 }
                 catch (FaceAPIException faceEx)
                 {
-                    ShowErrorHelper.ShowDialog(faceEx.ErrorMessage, faceEx.ErrorCode);
+                    ShowAlertHelper.ShowDialog(faceEx.ErrorMessage, faceEx.ErrorCode);
                 }
                 catch (Exception ex)
                 {
-                    ShowErrorHelper.ShowDialog(ex.Message);
+                    ShowAlertHelper.ShowDialog(ex.Message);
                 }
             }
         }
@@ -171,18 +171,18 @@ namespace facetracking_api
                                                 
                         if (await _faceApiHelper.CreatePersonAsync(stream.AsStream(), UserName.Text))
                         {
-                            ShowErrorHelper.ShowDialog("Hi " + UserName.Text + ".", "Success");
+                            ShowAlertHelper.ShowDialog("Hi " + UserName.Text + ".", "Success");
                         }
                         else
                         {
-                            ShowErrorHelper.ShowDialog("Something went wrong. Try again.");
+                            ShowAlertHelper.ShowDialog("Something went wrong. Try again.");
                         }
                     }                    
                 }
             }
             catch (Exception ex)
             {
-                ShowErrorHelper.ShowDialog(ex.Message);
+                ShowAlertHelper.ShowDialog(ex.Message);
                 successful = false;
             }
 
@@ -220,7 +220,7 @@ namespace facetracking_api
                 MediaCaptureInitializationSettings initializationSettings = new MediaCaptureInitializationSettings();
                 if (_localSettings.Values["CameraId"] == null)
                 {
-                    ShowErrorHelper.ShowDialog("Cannot get your CamreaId, plase check your setting.");
+                    ShowAlertHelper.ShowDialog("Cannot get your CamreaId, plase check your setting.");
                 }
 
                 _cameraId = _localSettings.Values["CameraId"].ToString();
@@ -256,7 +256,7 @@ namespace facetracking_api
             }
             catch (Exception ex)
             {
-                ShowErrorHelper.ShowDialog(ex.Message);
+                ShowAlertHelper.ShowDialog(ex.Message);
                 result = false;
             }
 

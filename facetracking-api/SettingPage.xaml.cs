@@ -105,7 +105,7 @@ namespace facetracking_api
                 _localSettings.Values["EndPoint"] = EndPoint.Text;
                 _localSettings.Values["GroupId"] = GroupId.Text;
 
-                ShowErrorHelper.ShowDialog("Your settings have been store", "Done");
+                ShowAlertHelper.ShowDialog("Your settings have been store", "Done");
             }
             else
             {

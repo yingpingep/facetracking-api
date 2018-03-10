@@ -90,11 +90,11 @@ namespace facetracking_api
                 }
                 catch (Microsoft.ProjectOxford.Face.FaceAPIException faceEx)
                 {
-                    ShowErrorHelper.ShowDialog(faceEx.ErrorMessage, faceEx.ErrorCode);
+                    ShowAlertHelper.ShowDialog(faceEx.ErrorMessage, faceEx.ErrorCode);
                 }
                 catch (Exception ex)
                 {
-                    ShowErrorHelper.ShowDialog(ex.Message);
+                    ShowAlertHelper.ShowDialog(ex.Message);
                 }
             }
         }
@@ -112,7 +112,7 @@ namespace facetracking_api
                 MediaCaptureInitializationSettings initializationSettings = new MediaCaptureInitializationSettings();
                 if (_localSettings.Values["CameraId"] == null)
                 {
-                    ShowErrorHelper.ShowDialog("Cannot get your CamreaId, plase check your setting.");
+                    ShowAlertHelper.ShowDialog("Cannot get your CamreaId, plase check your setting.");
                     return false;
                 }
 
@@ -157,7 +157,7 @@ namespace facetracking_api
             }
             catch (Exception ex)
             {
-                ShowErrorHelper.ShowDialog("Cannot start to preview because " + ex.Message);
+                ShowAlertHelper.ShowDialog("Cannot start to preview because " + ex.Message);
                 result = false;
             }
 
@@ -219,12 +219,12 @@ namespace facetracking_api
             catch (Microsoft.ProjectOxford.Face.FaceAPIException faceEx)
             {
                 await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-                    ShowErrorHelper.ShowDialog(faceEx.ErrorMessage, faceEx.ErrorCode));                
+                    ShowAlertHelper.ShowDialog(faceEx.ErrorMessage, faceEx.ErrorCode));                
             }
             catch (Exception ex)
             {
                 await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-                    ShowErrorHelper.ShowDialog(ex.Message));                
+                    ShowAlertHelper.ShowDialog(ex.Message));                
             }
             finally
             {
@@ -378,11 +378,11 @@ namespace facetracking_api
         private void ButtonStream_Click(object sender, RoutedEventArgs e)
         {
             if (_state == StreamingState.Idle)
-            {
+            {                
                 ChangeStateAsync(StreamingState.Streaming);
             }
             else
-            {
+            {                
                 ChangeStateAsync(StreamingState.Idle);
             }
         }        

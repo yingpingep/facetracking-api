@@ -20,6 +20,11 @@
                         <FontIcon Glyph="&#xECC8;"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
+                <NavigationViewItem x:Uid="Test" Content="Test" Tag="test">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xECC8;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
             </NavigationView.MenuItems>
             <Frame x:Name="ContentFrame">
             </Frame>
