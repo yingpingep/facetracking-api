@@ -121,5 +121,42 @@ namespace facetracking_api.Services
 
             return customFaceModels;
         }
+
+        public async Task<CustomFaceModel> GetIdentifySingleResultAsync(Stream picture)
+        {
+            CustomFaceModel customFaceModel = null;
+            // await WaitIfOverCallLimitAsync();
+            Face[] detectResults = await _serviceClient.DetectAsync(picture);
+
+            if (detectResults.Length != 1)
+            {
+                return customFaceModel;
+            }
+
+            Guid[] guids = detectResults.Select(x => x.FaceId).ToArray();
+            IdentifyResult[] identifyResults = await _serviceClient.IdentifyAsync(_groupId, guids);
+            string name = string.Empty;
+            try
+            {
+                name = (await _serviceClient.GetPersonAsync(_groupId, identifyResults[0].Candidates[0].PersonId)).Name;
+            }
+            catch (Exception)
+            {
+                return customFaceModel;
+            }
+
+            FaceRectangle rectangle = detectResults[0].FaceRectangle;
+
+            CustomFaceModel model = new CustomFaceModel()
+            {
+                Name = name,
+                Top = rectangle.Top,
+                Left = rectangle.Left,
+                Width = rectangle.Width,
+                Height = rectangle.Height
+            };
+
+            return customFaceModel;
+        }
     }
 }

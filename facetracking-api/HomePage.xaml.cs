@@ -57,7 +57,8 @@ namespace facetracking_api
 
         private Windows.Storage.ApplicationDataContainer _localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
         private VideoEncodingProperties _videoProperties;
-        FaceApiHelper _faceApiHelper;
+        private FaceApiHelper _faceApiHelper;
+        private DataHelper _dataHelper;
 
         public HomePage()
         {
@@ -91,6 +92,18 @@ namespace facetracking_api
                 catch (Microsoft.ProjectOxford.Face.FaceAPIException faceEx)
                 {
                     ShowAlertHelper.ShowDialog(faceEx.ErrorMessage, faceEx.ErrorCode);
+                }
+                catch (Exception ex)
+                {
+                    ShowAlertHelper.ShowDialog(ex.Message);
+                }
+            }
+
+            if (_dataHelper == null)
+            {
+                try
+                {
+                    _dataHelper = new DataHelper();
                 }
                 catch (Exception ex)
                 {
@@ -193,21 +206,27 @@ namespace facetracking_api
                     if (builtinFaces.Count != 0)
                     {                        
                         var frameSize = new Size(currentFrame.SoftwareBitmap.PixelWidth, currentFrame.SoftwareBitmap.PixelHeight);
-                        //await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-                        //{
-                        //    ShowResult(frameSize, builtinFaces);
-                        //});
+                        await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                        {
+                            ShowFromBuiltIn(frameSize, builtinFaces);
+                        });
 
                         // Get picture from videoframe.                                       
                         IRandomAccessStream stream = new InMemoryRandomAccessStream();
                         BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, stream);
                         encoder.SetSoftwareBitmap(tempBitmap);
-                        await encoder.FlushAsync();
-                        
+                        await encoder.FlushAsync();                        
+                        CustomFaceModel customFaces = await _faceApiHelper.GetIdentifySingleResultAsync(stream.AsStream());
 
-                        CustomFaceModel[] customFaces = await _faceApiHelper.GetIdentifyResultAsync(stream.AsStream());
-                        await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-                            ShowFromFaceApi(frameSize, customFaces));
+
+                        if (customFaces != null)
+                        {
+                            await _dataHelper.ChangeAttendStatusAsync(customFaces.Name, true);
+                            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                                ShowLoginSuccess(customFaces));
+                        }
+                        //await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                        //    ShowFromFaceApi(frameSize, customFaces));
                     }
                     else
                     {
@@ -262,6 +281,32 @@ namespace facetracking_api
                     PaintingCanvas.Children.Add(box);
                 };
             }
+        }
+
+        private void ShowLoginSuccess(CustomFaceModel customFace)
+        {
+            TextBlock tb = new TextBlock()
+            {
+                Text = "嗨, " + customFace.Name + "\n歡迎你來 😊",
+                FontSize = 32
+            };
+            LoginStack.Children.Add(tb);
+
+            Button bt = new Button()
+            {
+                FontFamily = new FontFamily("Segoe MDL2 Assets"),
+                FontSize = 30,
+                Width = 50,
+                Height = 50,
+                Content = "&#xEB51;"
+            };
+            bt.Click += Bt_Click;
+            LoginStack.Children.Add(bt);
+        }
+
+        private void Bt_Click(object sender, RoutedEventArgs e)
+        {
+            LoginStack.Children.Clear();
         }
 
         private void ShowFromFaceApi(Size frameSize, CustomFaceModel[] customFaces)
@@ -320,7 +365,8 @@ namespace facetracking_api
                     await ShutdownCameraAsync();
                     _state = newState;
                     break;
-                case StreamingState.Streaming:                  
+                case StreamingState.Streaming:
+                    PaintingCanvas.Background = null;
                     bool isStartPreview = await StartStreamingAsync();
                     // If failure to start preview, change state to idle.
                     if (!isStartPreview)

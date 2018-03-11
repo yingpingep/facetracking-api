@@ -52,13 +52,13 @@ namespace facetracking_api
                             Tag = item
                         };
                         
-                        if (_localSettings.Values["CameraId"] == null)
+                        if (_localSettings.Values[Constants.CameraId] == null)
                         {
                             rb.IsChecked = true;
-                            _localSettings.Values["CameraId"] = item.CameraId;
-                            _localSettings.Values["CameraPosition"] = (int)item.Position;
+                            _localSettings.Values[Constants.CameraId] = item.CameraId;
+                            _localSettings.Values[Constants.CameraPosition] = (int)item.Position;
                         }
-                        else if (item.CameraId.Equals(_localSettings.Values["CameraId"].ToString()))
+                        else if (item.CameraId.Equals(_localSettings.Values[Constants.CameraId].ToString()))
                         {
                             rb.IsChecked = true;
                         }
@@ -68,19 +68,24 @@ namespace facetracking_api
                     }
                 }
 
-                if (_localSettings.Values["FaceAPIKey"] != null)
+                if (_localSettings.Values[Constants.FaceAPIKey] != null)
                 {
-                    SubscriptionKey.Text = _localSettings.Values["FaceAPIKey"].ToString();
+                    SubscriptionKey.Text = _localSettings.Values[Constants.FaceAPIKey].ToString();
                 }
 
-                if (_localSettings.Values["EndPoint"] != null)
+                if (_localSettings.Values[Constants.EndPoint] != null)
                 {
-                    EndPoint.Text = _localSettings.Values["EndPoint"].ToString();
+                    EndPoint.Text = _localSettings.Values[Constants.EndPoint].ToString();
                 }
 
-                if (_localSettings.Values["GroupId"] != null)
+                if (_localSettings.Values[Constants.GroupId] != null)
                 {
-                    GroupId.Text = _localSettings.Values["GroupId"].ToString();
+                    GroupId.Text = _localSettings.Values[Constants.GroupId].ToString();
+                }
+
+                if (_localSettings.Values[Constants.WebEndPoint] != null)
+                {
+                    WebEndPoint.Text = _localSettings.Values[Constants.WebEndPoint].ToString();
                 }
             }
             catch (Exception)
@@ -93,23 +98,23 @@ namespace facetracking_api
         {
             RadioButton rb = sender as RadioButton;
             var item = rb.Tag as CameraModel;
-            _localSettings.Values["CameraId"] = item.CameraId;
-            _localSettings.Values["CameraPosition"] = (int)item.Position;
+            _localSettings.Values[Constants.CameraId] = item.CameraId;
+            _localSettings.Values[Constants.CameraPosition] = (int)item.Position;
         }
 
         private void ButtonGetKey_Click(object sender, RoutedEventArgs e)
         {
-            if (SubscriptionKey.Text != null && EndPoint.Text != null && GroupId.Text != null)
+            if (SubscriptionKey.Text != null && EndPoint.Text != null && GroupId.Text != null && WebEndPoint.Text != null)
             {
-                _localSettings.Values["FaceAPIKey"] = SubscriptionKey.Text;
-                _localSettings.Values["EndPoint"] = EndPoint.Text;
-                _localSettings.Values["GroupId"] = GroupId.Text;
+                _localSettings.Values[Constants.FaceAPIKey] = SubscriptionKey.Text;
+                _localSettings.Values[Constants.EndPoint] = EndPoint.Text;
+                _localSettings.Values[Constants.GroupId] = GroupId.Text;
+                _localSettings.Values[Constants.WebEndPoint] = WebEndPoint.Text;
 
                 ShowAlertHelper.ShowDialog("Your settings have been store", "Done");
             }
             else
             {
-                // Alert.
                 return;
             }
         }

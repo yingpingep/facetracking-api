@@ -5,22 +5,24 @@
     xmlns:local="using:facetracking_api"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:model="using:facetracking_api.Models"
     mc:Ignorable="d">
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="auto"/>
-        </Grid.ColumnDefinitions>
-        <Rectangle Fill="Black" Margin="100, 0, 0, 0" Grid.Column="0"/>
-        <Button Content="aCCC" Click="Button_Click"/>
-        <Grid Grid.Column="1">
-            <Grid.Resources>
-                
-            </Grid.Resources>
-            <StackPanel x:Name="stack">
-                
-            </StackPanel>
-        </Grid>
+        <GridView x:Name="PrintList" IsItemClickEnabled="False" Margin="10" SelectionMode="None">
+            <GridView.ItemTemplate>
+                <DataTemplate x:DataType="model:CostModel">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Text="{Binding NickName}" FontSize="24" Width="100" Grid.Row="0" Margin="8, 4, 0, 0" HorizontalTextAlignment="Left"/>
+                        <TextBlock Text="{Binding Numbers}" FontSize="32" Width="100" Grid.Row="1" Margin="8, 0, 8, 8" VerticalAlignment="Center" HorizontalTextAlignment="Center"/>
+                    </Grid>
+                </DataTemplate>
+            </GridView.ItemTemplate>
+        </GridView>
     </Grid>
 </Page>

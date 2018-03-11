@@ -20,12 +20,23 @@
             <RowDefinition Height="auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="auto"/>
+        </Grid.ColumnDefinitions>
+        
         <StackPanel x:Name="StackControl" Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Top">
-            <Button x:Name="ButtonStream" FontFamily="Segoe MDL2 Assets" Content="&#xE93E;" Click="ButtonStream_Click" Background="Transparent" Width="50" Height="50" Margin="20, 0, 20, 0" />
+            <Button x:Name="ButtonStream" FontSize="30" FontFamily="Segoe MDL2 Assets" Content="&#xE93E;" Click="ButtonStream_Click" Background="Transparent" Width="50" Height="50" Margin="20, 0, 20, 0" />
         </StackPanel>
         <Grid Margin="20, 15, 20, 15" Grid.Row="1">
             <CaptureElement x:Name="CameraPreview" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Stretch="Fill"/>
             <Canvas x:Name="PaintingCanvas" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+        </Grid>
+
+        <Grid Grid.RowSpan="2" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center">
+            <StackPanel x:Name="LoginStack">
+            </StackPanel>
         </Grid>
     </Grid>
 </Page>

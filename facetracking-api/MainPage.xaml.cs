@@ -63,7 +63,7 @@ namespace facetracking_api
                     ContentFrame.Navigate(typeof(EnrollPage));
                     break;
                 case "test":
-                    NavigationView.Header = "Test";
+                    NavigationView.Header = "List";
                     ContentFrame.Navigate(typeof(Test));
                     break;
                 default:

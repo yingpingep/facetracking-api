@@ -11,23 +11,29 @@
         <StackPanel Margin="10, 0, 0, 0">
             <TextBlock Text="選擇相機" FontSize="30"/>
             <StackPanel x:Name="StackCameraRadios"/>
-            <TextBlock Text="輸入序號" FontSize="30"/>
             <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="auto"/>
-                </Grid.RowDefinitions>
-                
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="auto"/>
                 </Grid.ColumnDefinitions>
-                <TextBox x:Name="SubscriptionKey" Grid.Column="0" Grid.Row="0" Margin="0, 0, 10, 10"/>
-                <TextBox x:Name="EndPoint" Grid.Column="0" Grid.Row="1" Margin="0, 0, 10, 0"/>
-                <Button x:Name="ButtonGetKey" Content="確認" Grid.Column="1" Grid.Row="1"  Width="100" Margin="0, 0, 10, 0" Click="ButtonGetKey_Click"/>
+
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="Face API Key" FontSize="30"/>
+                    <TextBox x:Name="SubscriptionKey" Margin="0, 0, 10, 10"/>
+                    
+                    <TextBlock Text="Face API EndPoint" FontSize="30"/>
+                    <TextBox x:Name="EndPoint" Grid.Column="0" Grid.Row="1" Margin="0, 0, 10, 0"/>
+
+                    <TextBlock Text="PersonGroup ID" FontSize="30"/>
+                    <TextBox x:Name="GroupId" Margin="0, 0, 10, 0"/>
+
+                    <TextBlock Text="Web EndPoint" FontSize="30"/>
+                    <TextBox x:Name="WebEndPoint" Margin="0, 0, 10, 0"/>
+                </StackPanel>
+
+                <Button x:Name="ButtonGetKey" Content="&#xE74E;" FontFamily="Segoe MDL2 Assets" FontSize="32" 
+                        Grid.Column="1" Width="100" Height="100" Margin="0, 0, 10, 0" Click="ButtonGetKey_Click" VerticalAlignment="Bottom" Background="Transparent"/>
             </Grid>
-            <TextBlock Text="請輸入 PersonGroup ID" FontSize="30"/>
-            <TextBox x:Name="GroupId" Margin="0, 0, 120, 0"/>
         </StackPanel>
     </Grid>
 </Page>
