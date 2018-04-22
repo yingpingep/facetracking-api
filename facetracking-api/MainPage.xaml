@@ -15,16 +15,6 @@
                         <FontIcon Glyph="&#xE80F;"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem x:Uid="Enroll" Content="Create" Tag="enroll">
-                    <NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xECC8;"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
-                <NavigationViewItem x:Uid="List" Content="Test" Tag="test">
-                    <NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xECC8;"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
             </NavigationView.MenuItems>
             <Frame x:Name="ContentFrame">
             </Frame>

@@ -20,7 +20,7 @@ namespace facetracking_api.Services
         
         public FaceApiHelper()
         {
-            if (_localSettings.Values["FaceAPIKey"] ==null || _localSettings.Values["EndPoint"] == null)
+            if (_localSettings.Values["FaceAPIKey"] == null || _localSettings.Values["EndPoint"] == null)
             {
                 throw new Exception("Cannot find api key or end point.");
             }
@@ -72,6 +72,43 @@ namespace facetracking_api.Services
             }
 
             return successful;
+        }
+
+        public async Task<EmotionModel> GetEmotionSingleAsync(Stream picture)
+        {
+            EmotionModel result = null;
+            FaceAttributeType[] returnAttributes = { FaceAttributeType.Smile, FaceAttributeType.Emotion };
+
+            try
+            {
+                Face[] detectResults = await _serviceClient.DetectAsync(picture, returnFaceAttributes: returnAttributes);
+                if (detectResults.Length == 0 || detectResults == null)
+                {
+                    throw new FaceAPIException();
+                }
+
+                Face target = detectResults[0];
+                FaceAttributes attributes = target.FaceAttributes;
+                result = new EmotionModel()
+                {
+                    DeviceId = _localSettings.Values["DeviceId"].ToString(),
+                    Smile = attributes.Smile,
+                    Anger = attributes.Emotion.Anger,
+                    Contempt = attributes.Emotion.Contempt,
+                    Disgust = attributes.Emotion.Disgust,
+                    Fear = attributes.Emotion.Fear,
+                    Happiness = attributes.Emotion.Happiness,
+                    Sadness = attributes.Emotion.Sadness,
+                    Neutral = attributes.Emotion.Neutral,
+                    Surprise = attributes.Emotion.Surprise
+                };
+            }
+            catch (Exception ex)
+            {
+                ShowAlertHelper.ShowDialog(ex.Message);
+            }
+
+            return result;
         }
 
         public async Task<CustomFaceModel[]> GetIdentifyResultAsync(Stream picture)

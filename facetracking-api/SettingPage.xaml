@@ -20,20 +20,21 @@
                 <StackPanel Grid.Column="0">
                     <TextBlock Text="Face API Key" FontSize="30"/>
                     <TextBox x:Name="SubscriptionKey" Margin="0, 0, 10, 10"/>
-                    
+
                     <TextBlock Text="Face API EndPoint" FontSize="30"/>
                     <TextBox x:Name="EndPoint" Grid.Column="0" Grid.Row="1" Margin="0, 0, 10, 0"/>
 
+                    <!--
                     <TextBlock Text="PersonGroup ID" FontSize="30"/>
                     <TextBox x:Name="GroupId" Margin="0, 0, 10, 0"/>
+                    -->
 
                     <TextBlock Text="Web EndPoint" FontSize="30"/>
                     <TextBox x:Name="WebEndPoint" Margin="0, 0, 10, 0"/>
                 </StackPanel>
-
-                <Button x:Name="ButtonGetKey" Content="&#xE74E;" FontFamily="Segoe MDL2 Assets" FontSize="32" 
-                        Grid.Column="1" Width="100" Height="100" Margin="0, 0, 10, 0" Click="ButtonGetKey_Click" VerticalAlignment="Bottom" Background="Transparent"/>
             </Grid>
+            <Button x:Name="ButtonGetKey" Content="&#xE74E;" FontFamily="Segoe MDL2 Assets" FontSize="32" 
+                        Grid.Column="1" Width="50" Height="50" Margin="0, 0, 10, 0" Click="ButtonGetKey_Click" VerticalAlignment="Bottom" Background="Transparent"/>
         </StackPanel>
     </Grid>
 </Page>

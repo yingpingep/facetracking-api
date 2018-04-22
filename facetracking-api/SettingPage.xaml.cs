@@ -80,7 +80,7 @@ namespace facetracking_api
 
                 if (_localSettings.Values[Constants.GroupId] != null)
                 {
-                    GroupId.Text = _localSettings.Values[Constants.GroupId].ToString();
+                    // GroupId.Text = _localSettings.Values[Constants.GroupId].ToString();
                 }
 
                 if (_localSettings.Values[Constants.WebEndPoint] != null)
@@ -104,11 +104,11 @@ namespace facetracking_api
 
         private void ButtonGetKey_Click(object sender, RoutedEventArgs e)
         {
-            if (SubscriptionKey.Text != null && EndPoint.Text != null && GroupId.Text != null && WebEndPoint.Text != null)
+            if (SubscriptionKey.Text != null && EndPoint.Text != null && WebEndPoint.Text != null)
             {
                 _localSettings.Values[Constants.FaceAPIKey] = SubscriptionKey.Text;
                 _localSettings.Values[Constants.EndPoint] = EndPoint.Text;
-                _localSettings.Values[Constants.GroupId] = GroupId.Text;
+                // _localSettings.Values[Constants.GroupId] = GroupId.Text;
                 _localSettings.Values[Constants.WebEndPoint] = WebEndPoint.Text;
 
                 ShowAlertHelper.ShowDialog("Your settings have been store", "Done");

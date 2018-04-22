@@ -7,9 +7,15 @@ namespace facetracking_api.Services
     {
         public static async void ShowDialog(string message, string title = "Error")
         {
-            MessageDialog errorDialog = new MessageDialog(message, title);
-            errorDialog.Commands.Add(new UICommand("Close"));
-            await errorDialog.ShowAsync();
+            try
+            {
+                MessageDialog errorDialog = new MessageDialog(message, title);
+                errorDialog.Commands.Add(new UICommand("Close"));
+                await errorDialog.ShowAsync();
+            }
+            catch (Exception)
+            {
+            }            
         }
     }
 }

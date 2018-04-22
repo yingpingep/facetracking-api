@@ -25,9 +25,11 @@ namespace facetracking_api
     /// </summary>
     public sealed partial class MainPage : Page
     {
+        private Windows.Storage.ApplicationDataContainer _localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
         public MainPage()
         {
-            this.InitializeComponent();            
+            this.InitializeComponent();
+            _localSettings.Values["DeviceId"] = "techrembler-device";            
         }        
 
         private void NavigationView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
@@ -61,10 +63,6 @@ namespace facetracking_api
                 case "enroll":
                     NavigationView.Header = "Enroll";
                     ContentFrame.Navigate(typeof(EnrollPage));
-                    break;
-                case "test":
-                    NavigationView.Header = "List";
-                    ContentFrame.Navigate(typeof(Test));
                     break;
                 default:
                     break;

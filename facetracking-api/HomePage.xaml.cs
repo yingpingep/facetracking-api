@@ -1,9 +1,11 @@
 ﻿using facetracking_api.Models;
 using facetracking_api.Services;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using System.Threading.Tasks;
@@ -45,6 +47,7 @@ namespace facetracking_api
             Streaming
         }
 
+        private IoTHelper _iotHelper;
         private StreamingState _state;
         private MediaCapture _mediaCapture;
         private FaceTracker _faceTracker;        
@@ -77,6 +80,14 @@ namespace facetracking_api
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             _state = StreamingState.Idle;
+            bool isGotoSetting = false;
+
+            IoTHelper register = new IoTHelper();
+            if (!(await register.GoRegisterAsync(_localSettings.Values["DeviceId"].ToString())))
+            {
+                ShowAlertHelper.ShowDialog("Cannot register your device.");
+            }
+
             if (_faceTracker == null)
             {
                 _faceTracker = await FaceTracker.CreateAsync();
@@ -87,7 +98,7 @@ namespace facetracking_api
                 try
                 {
                     _faceApiHelper = new FaceApiHelper();
-                    await _faceApiHelper.CheckGroupExistAsync();
+                    // await _faceApiHelper.CheckGroupExistAsync();
                 }
                 catch (Microsoft.ProjectOxford.Face.FaceAPIException faceEx)
                 {
@@ -96,6 +107,7 @@ namespace facetracking_api
                 catch (Exception ex)
                 {
                     ShowAlertHelper.ShowDialog(ex.Message);
+                    isGotoSetting = true;
                 }
             }
 
@@ -108,7 +120,18 @@ namespace facetracking_api
                 catch (Exception ex)
                 {
                     ShowAlertHelper.ShowDialog(ex.Message);
+                    isGotoSetting = true;
                 }
+            }
+
+            if (_iotHelper == null)
+            {
+                _iotHelper = new IoTHelper();
+            }
+
+            if (isGotoSetting)
+            {
+                Content = new SettingPage();
             }
         }
 
@@ -216,17 +239,17 @@ namespace facetracking_api
                         BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, stream);
                         encoder.SetSoftwareBitmap(tempBitmap);
                         await encoder.FlushAsync();                        
-                        CustomFaceModel customFaces = await _faceApiHelper.GetIdentifySingleResultAsync(stream.AsStream());
+                        
+                        var result = await _faceApiHelper.GetEmotionSingleAsync(stream.AsStream());
+                        bool trans = await _iotHelper.PostMessageAsync(result);
 
-
-                        if (customFaces != null)
+                        if (!trans)
                         {
-                            await _dataHelper.ChangeAttendStatusAsync(customFaces.Name, true);
-                            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-                                ShowLoginSuccess(customFaces));
+                            System.Diagnostics.Debug.WriteLine("Post false {0}", DateTime.Now);
                         }
-                        //await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-                        //    ShowFromFaceApi(frameSize, customFaces));
+
+
+                        System.Diagnostics.Debug.WriteLine("Post successfully with {0} at {1}", JsonConvert.SerializeObject(result) ,DateTime.Now);
                     }
                     else
                     {
